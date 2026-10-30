@@ -262,6 +262,7 @@
       @media (max-width: 560px) {
         .topbar { align-items: start; flex-direction: column; }
         .card-head { flex-wrap: wrap; }
+        .title-break { display: none; }
         .card-head .button { max-width: none; }
         .tasks, .glance { grid-template-columns: 1fr; }
         table { min-width: 620px; }
@@ -342,12 +343,12 @@
 
         <div class="hero">
           <div>
-            <h1>Exploring Access and Participation Plans</h1>
+            <h1>Exploring Access and <br class="title-break">Participation Plans</h1>
             <p>
               Every English higher education provider registered with the Office for Students publishes an Access and Participation Plan,
-              setting out its targets and the activities it plans to deliver. Find, compare, map and download them here.
+              setting out its targets and the activities it plans to deliver. Find, compare, map and download them through the APP Explorer.
+              It is here to support collaboration and shared learning between providers.
             </p>
-            <p>It is here to support collaboration and shared learning between providers. It does not rank or judge them.</p>
           </div>
           <aside class="pilot-panel" aria-label="Important note">
             <strong>Use with care</strong>
@@ -375,7 +376,6 @@
       <!-- ================= Task chooser ================= -->
       <section id="tasks" class="shell" aria-labelledby="tasks-heading">
         <h2 id="tasks-heading">What would you like to do?</h2>
-        <p class="lede">Choose a task. Each one takes you through a few short steps. You can switch task at any time, and carry your choices from one task to another.</p>
 
         <div class="tasks" role="tablist" aria-label="Tasks">
           <button class="task" role="tab" id="tab-download" aria-controls="panel-download" aria-selected="false" tabindex="0" data-task="download">
@@ -548,7 +548,6 @@
         <!-- ---------- Task 4: map ---------- -->
         <div class="panel" role="tabpanel" id="panel-map" aria-labelledby="tab-map" hidden>
           <h3 tabindex="-1">Map APP work across England</h3>
-          <p class="lede">Each dot is a provider; a bigger dot means more matching records in its plan. Size reflects how much the plan describes, not performance. Choose an area on the map to zoom in, or a dot to see that provider's records.</p>
           <div id="mapSetNotice"></div>
           <div class="filter-grid" style="margin-top:1rem; align-items:start">
             <fieldset>
