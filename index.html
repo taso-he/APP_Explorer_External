@@ -203,6 +203,7 @@
       }
       .tag.stage { border-color: #5ca6f3; background: #eef6fe; }
       .tag.group { border-color: var(--green); background: #e9fbf6; }
+      .tag.awaiting { border-color: #b26b00; background: #fff4e0; color: #6b4000; font-weight: 600; }
       .tag.risk { border-color: #c9c4b8; background: var(--soft-2); }
       .target-choice { display: grid; gap: .5rem; margin-top: .6rem; }
       .target-choice label {
@@ -611,6 +612,7 @@
             <h3>Before you use the data</h3>
             <ul>
               <li><strong>Plans can change after they are published.</strong> Formal variations to APPs may not be included, depending on when they were published. Providers may also have adjusted their interventions in response to new insight.</li>
+              <li><strong>Some interventions are still being checked.</strong> Those marked "Awaiting review" have details that TASO has yet to confirm against the plan.</li>
               <li><strong>Check the original plan.</strong> Targets and activities are recorded in providers' own words, and every record links to the plan it came from. We have grouped them by lifecycle stage and student group so they can be filtered.</li>
               <li><strong>Not finding a provider doesn't mean it isn't working on a gap.</strong> Its plan may describe the work differently, or its interventions may not have been added yet.</li>
               <li><strong>This is not a league table.</strong> The number of targets or activities reflects how a plan is written, not how much a provider does or how well. Please don't use the data to rank or judge providers.</li>
@@ -834,7 +836,8 @@
           interventions: interventions.map((i) => ({
             ukprn: i.ukprn, name: i.intervention_name || "", status: i.activity_status || "", description: i.description || "",
             strategies: i.strategies || [], students: i.students_targeted || "", groups: i.target_demographics || [],
-            stages: i.lifecycle_stages || [], target_refs: i.linked_target_ids || [], risks: i.risks || [], page: i.page
+            stages: i.lifecycle_stages || [], target_refs: i.linked_target_ids || [], risks: i.risks || [], page: i.page,
+            awaiting: !!i.awaiting_review
           })),
           meta: { as_of: dates.length ? dates[dates.length - 1].slice(0, 10) : "" }
         };
@@ -1052,7 +1055,7 @@
         ["students_targeted", (i) => i.students], ["student_group_codes", (i) => i.groups.join("; ")],
         ["lifecycle_stages", (i) => i.stages.join("; ")], ["linked_targets", (i) => i.target_refs.join("; ")],
         ["linked_target_aims", (i) => i.target_refs.map((r) => (STATE.targetByRef[`${i.ukprn}|${r}`] || {}).aim || "").join("; ")],
-        ["risks_to_equality_of_opportunity", (i) => i.risks.join("; ")], ["plan_page", (i) => i.page ?? ""],
+        ["risks_to_equality_of_opportunity", (i) => i.risks.join("; ")], ["plan_page", (i) => i.page ?? ""], ["awaiting_review", (i) => (i.awaiting ? "Yes" : "No")],
         ["plan_url", (i) => STATE.byUk[i.ukprn].plan_url]
       ];
       function downloadCSV(rows, columns, filename) {
@@ -1315,7 +1318,7 @@
           return `<article class="card">
             <div class="card-head"><h4>${esc(i.name)}</h4>${planLink(p, i.page)}</div>
             <p class="meta" style="margin:.1rem 0 .4rem"><span class="provider-name">${esc(p.name)}</span> &middot; ${esc(p.region)}${i.strategies.length ? ` &middot; ${esc(i.strategies.join("; "))}` : ""}</p>
-            <div>${i.stageKeys.map((s) => `<span class="tag stage">${esc(stageLabel(s))}</span>`).join("")}${i.stages.includes("whole_lifecycle") ? `<span class="tag stage">Whole lifecycle</span>` : ""}${i.groupKeys.map((g) => `<span class="tag group">${esc(groupLabel(g))}</span>`).join("")}</div>
+            <div>${i.awaiting ? `<span class="tag awaiting" title="Some details of this record are still being checked against the plan">Awaiting review</span>` : ""}${i.stageKeys.map((s) => `<span class="tag stage">${esc(stageLabel(s))}</span>`).join("")}${i.stages.includes("whole_lifecycle") ? `<span class="tag stage">Whole lifecycle</span>` : ""}${i.groupKeys.map((g) => `<span class="tag group">${esc(groupLabel(g))}</span>`).join("")}</div>
             <p style="margin:.5rem 0 0"><strong>For:</strong> ${esc(i.students || "Not stated")}</p>
             <details><summary>What the plan says</summary><p style="white-space:pre-line">${esc(i.description || "Not stated")}</p>
               ${i.risks.length ? `<p><strong>Risks to equality of opportunity:</strong><br>${i.risks.map((r) => `<span class="tag risk">${esc(r)}</span>`).join("")}</p>` : ""}
