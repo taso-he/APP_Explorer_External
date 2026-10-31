@@ -94,6 +94,9 @@
       .editor { margin-top: .6rem; }
       .editor textarea { width: 100%; min-height: 90px; border: 1px solid var(--line-strong); border-radius: 6px; padding: .5rem .6rem; resize: vertical; }
       .hint { font-size: .88rem; color: var(--muted); }
+      .similar { border: 1px solid var(--line); border-radius: 6px; padding: .5rem .75rem; margin: .6rem 0; background: var(--soft-2); }
+      .similar ul { margin: .2rem 0 0; padding-left: 1.1rem; }
+      .similar li { margin-bottom: .25rem; }
       .choices { border: 1px solid var(--line); border-radius: 6px; padding: .5rem .75rem .6rem; margin: 0 0 .6rem;
         display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .25rem 1rem; }
       .choices.one { grid-template-columns: 1fr; }
@@ -210,7 +213,7 @@
         "Limited choice of course type and delivery mode", "Insufficient academic support", "Insufficient personal support",
         "Mental health", "Ongoing impacts of coronavirus", "Cost pressures", "Capacity issues", "Progression from higher education"]
         .map((name, n) => [`EORR Risk ${n + 1} – ${name}`, `${n + 1}. ${name}`]);
-      const STATE = { items: [], records: {}, plans: {}, targets: {}, shown: 25 };
+      const STATE = { items: [], records: {}, plans: {}, targets: {}, byProvider: {}, shown: 25 };
 
       // ---------- Session (Supabase email sign-in links) ----------
       function saveSession(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); } catch (e) {} STATE.session = s; }
@@ -282,7 +285,7 @@
       async function loadQueue() {
         const [items, records, providers] = await Promise.all([
           fetchAll("/rest/v1/qa_person_checks?select=*&order=provider.asc,record_id.asc,check_id.asc"),
-          fetchAll("/rest/v1/interventions_working?select=record_id,intervention_name,intervention_description,intervention_strategy,removed&order=record_id.asc"),
+          fetchAll("/rest/v1/interventions_working?select=record_id,ukprn,intervention_name,intervention_description,intervention_strategy,page,removed&order=record_id.asc"),
           fetchAll("/rest/v1/site_providers?select=ukprn,name,plan_url&order=ukprn.asc")
         ]);
         // Each provider's targets, so linked target references can be ticked rather than typed
@@ -292,7 +295,7 @@
           rows.forEach((t) => { (STATE.targets[t.ukprn] = STATE.targets[t.ukprn] || []).push(t); });
         }
         STATE.items = items;
-        records.forEach((r) => { STATE.records[r.record_id] = r; });
+        records.forEach((r) => { STATE.records[r.record_id] = r; (STATE.byProvider[r.ukprn] = STATE.byProvider[r.ukprn] || []).push(r); });
         providers.forEach((p) => { STATE.plans[p.ukprn] = p.plan_url; });
         if (!items.length) {
           const ok = await api("/rest/v1/rpc/is_reviewer", { method: "POST", body: "{}" });
@@ -366,6 +369,7 @@
               <div><div class="value-label">${esc(k.right)}</div><div class="value suggested">${esc(i.suggested_value ? show(i.suggested_value, i.field) : "No suggestion")}</div></div>
             </div>` : ""}
           ${i.evidence_quote ? `<blockquote>"${esc(i.evidence_quote)}"${i.evidence_page ? ` <span class="meta">(page ${i.evidence_page})</span>` : ""}</blockquote>` : ""}
+          ${similarBox(i, name)}
           ${rec.intervention_description ? `<details><summary>What the record says</summary><p style="white-space:pre-line;margin:.4rem 0 0">${esc(rec.intervention_description)}</p></details>` : ""}
           ${decided ? `<p class="decided"><strong>${esc(label)}</strong>${i.final_value != null && valueKinds ? `: ${esc(show(i.final_value, i.field))}` : ""}
               <span class="meta"> &middot; ${esc(i.decided_by || "")}, ${i.decided_at ? new Date(i.decided_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}</span>
@@ -429,6 +433,28 @@
         if (optionsFor(i)) return JSON.stringify([...editor.querySelectorAll("input[type=checkbox]:checked")].map((c) => c.value));
         if (i.field === "demographics_combined") return (editor.querySelector("input[type=radio]:checked") || {}).value || "False";
         return (editor.querySelector("textarea, input") || {}).value.trim();
+      }
+      // Records from the same provider with a similar name, to check duplicates and missing rows by eye
+      const words = (t) => new Set(String(t || "").toLowerCase().replace(/^[a-z]{0,5}\d+[a-z\d.-]*[:\s-]+/, "").match(/[a-z0-9]{3,}/g) || []);
+      function similarRecords(i, name) {
+        const mine = words(name);
+        if (!mine.size) return [];
+        return (STATE.byProvider[i.ukprn] || []).filter((r) => r.record_id !== i.record_id).map((r) => {
+          const theirs = words(r.intervention_name);
+          const shared = [...mine].filter((w) => theirs.has(w)).length;
+          return { r, score: shared / Math.max(1, Math.min(mine.size, theirs.size)) };
+        }).filter((x) => x.score >= 0.6).sort((a, b) => b.score - a.score).slice(0, 5).map((x) => x.r);
+      }
+      function similarBox(i, name) {
+        if (!["removed", "kept_duplicate", "record_unsure", "missing"].includes(i.kind)) return "";
+        const rows = similarRecords(i, name);
+        const strat = (v) => show(v, "intervention_strategy").replace(/\n/g, "; ");
+        return `<div class="similar"><p class="value-label">Similar records from this provider</p>
+          ${rows.length ? `<ul>${rows.map((r) => `<li><strong>${esc(r.intervention_name)}</strong>
+              <span class="meta">${r.intervention_strategy ? ` &middot; ${esc(strat(r.intervention_strategy))}` : ""}${r.page ? ` &middot; page ${esc(r.page)}` : ""}</span>
+              ${r.removed ? `<span class="tag">Removed</span>` : `<span class="tag field">Kept</span>`}</li>`).join("")}</ul>`
+            : `<p class="meta" style="margin:.2rem 0 0">No other record from this provider has a similar name.</p>`}
+        </div>`;
       }
       function wire(i) {
         const el = $(`item-${i.check_id}`);
