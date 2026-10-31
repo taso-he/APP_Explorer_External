@@ -94,6 +94,14 @@
       .editor { margin-top: .6rem; }
       .editor textarea { width: 100%; min-height: 90px; border: 1px solid var(--line-strong); border-radius: 6px; padding: .5rem .6rem; resize: vertical; }
       .hint { font-size: .88rem; color: var(--muted); }
+      .choices { border: 1px solid var(--line); border-radius: 6px; padding: .5rem .75rem .6rem; margin: 0 0 .6rem;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .25rem 1rem; }
+      .choices.one { grid-template-columns: 1fr; }
+      .choices legend { padding: 0 .3rem; }
+      .choices label { display: flex; gap: .45rem; align-items: flex-start; cursor: pointer; font-size: .97rem; }
+      .choices label:hover { color: var(--brand); }
+      .choices input { margin-top: .3rem; }
+      .page-input { width: 8rem; min-height: 40px; border: 1px solid var(--line-strong); border-radius: 6px; padding: .4rem .6rem; display: block; margin-bottom: .6rem; }
       .decided { margin-top: .6rem; font-size: .95rem; }
       .more { margin: 1rem 0; text-align: center; }
       .empty { padding: 1.2rem; text-align: center; color: var(--muted); }
@@ -183,7 +191,26 @@
       };
       const LIST_FIELDS = new Set(["intervention_strategy", "target_demographics", "lifecycle_stages", "linked_target_ids",
                                    "linked_targets_text", "risks_to_equality_of_opportunity"]);
-      const STATE = { items: [], records: {}, plans: {}, shown: 25 };
+      // Fields with a fixed set of options get tick boxes instead of free text when edited
+      const DEMOGRAPHIC_CODES = [
+        ["age", "Age"], ["disability", "Disability"], ["ethnicity", "Ethnicity"], ["sex", "Sex"], ["lgbtq", "LGBTQ+"],
+        ["region", "Region (a named place)"], ["area_based", "Area-based (IMD, TUNDRA, POLAR)"], ["fsm", "Free school meals"],
+        ["low_income", "Low income"], ["first_in_family", "First in family"], ["care_experienced", "Care experienced"],
+        ["estranged", "Estranged"], ["carer", "Carers"], ["parents", "Parents"], ["military", "Military families"],
+        ["gtrsb", "Gypsy, Roma, Traveller, Showman and Boater"], ["refugee_asylum", "Refugees and asylum seekers"],
+        ["child_in_need", "Children in need"], ["ex_prisoner", "Ex-prisoners"], ["religion", "Religion"], ["commuter", "Commuter students"],
+        ["entry_route", "Entry qualifications or route"], ["all_students", "All students"], ["other", "Other (named in the plan)"]
+      ];
+      const LIFECYCLE_CODES = [
+        ["pre_entry_attainment", "Pre-entry attainment"], ["access", "Access"], ["transition", "Transition"],
+        ["continuation", "Continuation"], ["completion", "Completion"], ["attainment", "Attainment"],
+        ["progression", "Progression"], ["whole_lifecycle", "Whole lifecycle"]
+      ];
+      const EORR = ["Knowledge and skills", "Information and guidance", "Perception of higher education", "Application success rates",
+        "Limited choice of course type and delivery mode", "Insufficient academic support", "Insufficient personal support",
+        "Mental health", "Ongoing impacts of coronavirus", "Cost pressures", "Capacity issues", "Progression from higher education"]
+        .map((name, n) => [`EORR Risk ${n + 1} – ${name}`, `${n + 1}. ${name}`]);
+      const STATE = { items: [], records: {}, plans: {}, targets: {}, shown: 25 };
 
       // ---------- Session (Supabase email sign-in links) ----------
       function saveSession(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); } catch (e) {} STATE.session = s; }
@@ -258,6 +285,12 @@
           fetchAll("/rest/v1/interventions_working?select=record_id,intervention_name,intervention_description,intervention_strategy,removed&order=record_id.asc"),
           fetchAll("/rest/v1/site_providers?select=ukprn,name,plan_url&order=ukprn.asc")
         ]);
+        // Each provider's targets, so linked target references can be ticked rather than typed
+        const ukprns = [...new Set(items.map((i) => i.ukprn).filter(Boolean))];
+        for (let n = 0; n < ukprns.length; n += 60) {
+          const rows = await fetchAll(`/rest/v1/site_targets?select=ukprn,ref,aim&ukprn=in.(${ukprns.slice(n, n + 60).join(",")})&order=ref.asc`);
+          rows.forEach((t) => { (STATE.targets[t.ukprn] = STATE.targets[t.ukprn] || []).push(t); });
+        }
         STATE.items = items;
         records.forEach((r) => { STATE.records[r.record_id] = r; });
         providers.forEach((p) => { STATE.plans[p.ukprn] = p.plan_url; });
@@ -345,14 +378,57 @@
             <input class="note" type="text" placeholder="Note (optional)" aria-label="Note for ${esc(name)}">
           </div>
           ${k.edit ? `<div class="editor" hidden>
-              <label class="value-label" for="ed-${esc(i.check_id)}">New value</label>
-              <textarea id="ed-${esc(i.check_id)}">${esc(i.suggested_value || i.current_value || "")}</textarea>
-              <p class="hint">${LIST_FIELDS.has(i.field) ? 'Keep the list format, for example ["area_based", "ethnicity"].' : "Copy the plan's wording exactly."}</p>
+              ${editorFor(i)}
               <button class="button primary" type="button" data-save>Save this value</button>
               <button class="button ghost" type="button" data-cancel>Cancel</button>
             </div>` : ""}
           <p class="msg error" data-err hidden></p>
         </article>`;
+      }
+      // The options for a closed field, or null for a free-text field
+      function optionsFor(i) {
+        if (i.field === "target_demographics") return DEMOGRAPHIC_CODES;
+        if (i.field === "lifecycle_stages") return LIFECYCLE_CODES;
+        if (i.field === "risks_to_equality_of_opportunity") return EORR;
+        if (i.field === "linked_target_ids") {
+          const ts = STATE.targets[i.ukprn] || [];
+          return ts.length ? ts.map((t) => [t.ref, `${t.ref}: ${t.aim}`]) : null;
+        }
+        return null;
+      }
+      function startValue(i) { return i.suggested_value || i.current_value || ""; }
+      function editorFor(i) {
+        const id = `ed-${i.check_id}`, start = startValue(i), opts = optionsFor(i);
+        if (opts) {
+          let chosen = [];
+          try { chosen = JSON.parse(start); } catch (e) {}
+          if (!Array.isArray(chosen)) chosen = [];
+          // A risk written another way still ticks its number
+          const has = (v) => chosen.includes(v) || (i.field === "risks_to_equality_of_opportunity"
+            && chosen.some((c) => (String(c).match(/Risk\s*(\d+)/) || [])[1] === (v.match(/Risk\s*(\d+)/) || [])[1]));
+          return `<fieldset class="choices"><legend class="value-label">Choose all that apply</legend>
+            ${opts.map(([v, label]) => `<label><input type="checkbox" value="${esc(v)}"${has(v) ? " checked" : ""}> ${esc(label)}</label>`).join("")}
+          </fieldset>`;
+        }
+        if (i.field === "demographics_combined") {
+          const yes = /^true$/i.test(start.trim());
+          return `<fieldset class="choices one"><legend class="value-label">Is it one group with all the characteristics at once?</legend>
+            <label><input type="radio" name="${esc(id)}" value="True"${yes ? " checked" : ""}> True: one combined group</label>
+            <label><input type="radio" name="${esc(id)}" value="False"${yes ? "" : " checked"}> False: separate groups</label>
+          </fieldset>`;
+        }
+        if (i.field === "page") {
+          return `<label class="value-label" for="${esc(id)}">Plan page</label>
+            <input class="page-input" id="${esc(id)}" type="number" min="1" value="${esc(start)}">`;
+        }
+        return `<label class="value-label" for="${esc(id)}">New value</label>
+          <textarea id="${esc(id)}">${esc(start)}</textarea>
+          <p class="hint">${LIST_FIELDS.has(i.field) ? 'Keep the list format, for example ["first item", "second item"].' : "Copy the plan's wording exactly."}</p>`;
+      }
+      function editorValue(i, editor) {
+        if (optionsFor(i)) return JSON.stringify([...editor.querySelectorAll("input[type=checkbox]:checked")].map((c) => c.value));
+        if (i.field === "demographics_combined") return (editor.querySelector("input[type=radio]:checked") || {}).value || "False";
+        return (editor.querySelector("textarea, input") || {}).value.trim();
       }
       function wire(i) {
         const el = $(`item-${i.check_id}`);
@@ -361,11 +437,12 @@
         el.querySelectorAll("[data-d]").forEach((b) => b.addEventListener("click", () => decide(i, b.dataset.d, null, note())));
         const editor = el.querySelector(".editor");
         const edit = el.querySelector("[data-edit]");
-        if (edit) edit.addEventListener("click", () => { editor.hidden = false; editor.querySelector("textarea").focus(); });
+        if (edit) edit.addEventListener("click", () => { editor.hidden = false; editor.querySelector("textarea, input").focus(); });
         const save = el.querySelector("[data-save]");
         if (save) save.addEventListener("click", () => {
-          const v = editor.querySelector("textarea").value.trim();
-          if (LIST_FIELDS.has(i.field)) {
+          const v = editorValue(i, editor);
+          if (i.field === "page" && !/^\d+$/.test(v)) return showErr(el, "Enter the plan page as a number.");
+          if (LIST_FIELDS.has(i.field) && !optionsFor(i)) {
             try { if (!Array.isArray(JSON.parse(v))) throw 0; }
             catch (e) { return showErr(el, 'This needs to be a list, for example ["area_based"].'); }
           }
