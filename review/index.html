@@ -97,6 +97,12 @@
       .similar { border: 1px solid var(--line); border-radius: 6px; padding: .5rem .75rem; margin: .6rem 0; background: var(--soft-2); }
       .similar ul { margin: .2rem 0 0; padding-left: 1.1rem; }
       .similar li { margin-bottom: .25rem; }
+      .all-records { margin-top: .5rem; }
+      .all-records table { width: 100%; border-collapse: collapse; font-size: .93rem; background: white; }
+      .all-records th, .all-records td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+      .all-records th { background: var(--soft); font-size: .85rem; position: sticky; top: 0; }
+      .all-records td:first-child { white-space: nowrap; width: 3.5rem; }
+      .all-records .scroll { max-height: 360px; overflow: auto; margin-top: .4rem; }
       .choices { border: 1px solid var(--line); border-radius: 6px; padding: .5rem .75rem .6rem; margin: 0 0 .6rem;
         display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .25rem 1rem; }
       .choices.one { grid-template-columns: 1fr; }
@@ -454,7 +460,21 @@
               <span class="meta">${r.intervention_strategy ? ` &middot; ${esc(strat(r.intervention_strategy))}` : ""}${r.page ? ` &middot; page ${esc(r.page)}` : ""}</span>
               ${r.removed ? `<span class="tag">Removed</span>` : `<span class="tag field">Kept</span>`}</li>`).join("")}</ul>`
             : `<p class="meta" style="margin:.2rem 0 0">No other record from this provider has a similar name.</p>`}
+          ${allRecords(i)}
         </div>`;
+      }
+      // Every record kept for the provider, in plan page order, to compare against in full
+      function allRecords(i) {
+        const kept = (STATE.byProvider[i.ukprn] || []).filter((r) => !r.removed && r.record_id !== i.record_id)
+          .sort((a, b) => (parseInt(a.page, 10) || 9999) - (parseInt(b.page, 10) || 9999)
+                          || String(a.intervention_name).localeCompare(String(b.intervention_name)));
+        if (!kept.length) return "";
+        const strat = (v) => show(v, "intervention_strategy").replace(/\n/g, "; ");
+        return `<details class="all-records"><summary>Show all ${kept.length} records kept for ${esc(i.provider)}</summary>
+          <div class="scroll"><table><thead><tr><th scope="col">Page</th><th scope="col">Intervention</th><th scope="col">Strategies</th></tr></thead>
+            <tbody>${kept.map((r) => `<tr><td>${esc(r.page || "")}</td><td>${esc(r.intervention_name)}</td>
+              <td class="meta">${esc(r.intervention_strategy ? strat(r.intervention_strategy) : "")}</td></tr>`).join("")}</tbody></table></div>
+        </details>`;
       }
       function wire(i) {
         const el = $(`item-${i.check_id}`);
