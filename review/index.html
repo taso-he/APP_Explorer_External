@@ -380,7 +380,7 @@
         const valueKinds = i.kind === "field" || i.kind === "sample";
         const name = i.intervention || rec.intervention_name || "(no name)";
         const decided = i.status !== "open";
-        const label = { accepted: k.accept, rejected: k.reject, edited: "Edited" }[i.status];
+        const label = { accepted: k.accept, rejected: k.reject, edited: "Edited", closed: "Closed: the record was removed, so no decision is needed" }[i.status];
         return `<article class="item${decided ? " done" : ""}" id="item-${esc(i.check_id)}">
           <div class="item-head">
             <div>
@@ -401,7 +401,7 @@
           ${decided ? `<p class="decided"><strong>${esc(label)}</strong>${i.final_value != null && valueKinds ? `: ${esc(show(i.final_value, i.field))}` : ""}
               <span class="meta"> &middot; ${esc(i.decided_by || "")}, ${i.decided_at ? new Date(i.decided_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : ""}</span>
               ${i.note ? `<br><span class="meta">Note: ${esc(i.note)}</span>` : ""}
-              <button class="link-button" type="button" data-change>Change decision</button></p>` : ""}
+              ${i.status === "closed" ? "" : `<button class="link-button" type="button" data-change>Change decision</button>`}</p>` : ""}
           <div class="actions"${decided ? " hidden" : ""}>
             <button class="button primary" type="button" data-d="accept"${i.kind === "field" && !i.suggested_value ? " disabled" : ""}>${esc(k.accept)}</button>
             <button class="button ghost" type="button" data-d="reject">${esc(k.reject)}</button>
