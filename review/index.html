@@ -63,7 +63,7 @@
       .counts { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; font-size: .95rem; color: var(--muted); }
       .counts strong { color: var(--ink); }
 
-      .filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-top: 1rem; }
+      .filters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .8rem; margin-top: 1rem; }
       .filters label { display: grid; gap: .25rem; font-weight: 700; font-size: .92rem; }
       .filters select, .filters input { min-height: 42px; border: 1px solid var(--line-strong); border-radius: 6px; padding: .4rem .55rem; background: white; color: var(--ink); font-weight: 400; }
       .filters select:hover, .filters input:hover { border-color: var(--brand); }
@@ -161,6 +161,7 @@
           <div class="filters">
             <label>Status <select id="fStatus"><option value="open">Open</option><option value="done">Decided</option><option value="">All</option></select></label>
             <label>Type of item <select id="fKind"></select></label>
+            <label>Field <select id="fField"></select></label>
             <label>Provider <select id="fProvider"></select></label>
             <label>Search <input id="fSearch" type="search" placeholder="Intervention, field or text"></label>
           </div>
@@ -317,7 +318,9 @@
           .map((k) => `<option value="${k}">${esc(KINDS[k].label)}</option>`).join("");
         const provs = [...new Set(STATE.items.map((i) => i.provider).filter(Boolean))].sort((a, b) => a.localeCompare(b));
         $("fProvider").innerHTML = `<option value="">All providers</option>` + provs.map((p) => `<option>${esc(p)}</option>`).join("");
-        ["fStatus", "fKind", "fProvider"].forEach((id) => $(id).addEventListener("change", () => { STATE.shown = 25; render(); }));
+        const fields = Object.keys(FIELD_LABELS).filter((f) => STATE.items.some((i) => i.field === f));
+        $("fField").innerHTML = `<option value="">All fields</option>` + fields.map((f) => `<option value="${f}">${esc(FIELD_LABELS[f])}</option>`).join("");
+        ["fStatus", "fKind", "fField", "fProvider"].forEach((id) => $(id).addEventListener("change", () => { STATE.shown = 25; render(); }));
         $("fSearch").addEventListener("input", () => { STATE.shown = 25; render(); });
       }
 
@@ -330,9 +333,9 @@
         return v;
       }
       function filtered() {
-        const st = $("fStatus").value, k = $("fKind").value, p = $("fProvider").value, q = $("fSearch").value.trim().toLowerCase();
+        const st = $("fStatus").value, k = $("fKind").value, fl = $("fField").value, p = $("fProvider").value, q = $("fSearch").value.trim().toLowerCase();
         return STATE.items.filter((i) => (!st || (st === "open" ? i.status === "open" : i.status !== "open"))
-          && (!k || i.kind === k) && (!p || i.provider === p)
+          && (!k || i.kind === k) && (!fl || i.field === fl) && (!p || i.provider === p)
           && (!q || [i.intervention, i.field, FIELD_LABELS[i.field], i.reason, i.current_value, i.suggested_value, i.evidence_quote]
                     .some((x) => String(x || "").toLowerCase().includes(q))));
       }
@@ -344,7 +347,7 @@
         $("counts").innerHTML = `<span><strong>${done}</strong> of ${all.length} decided</span>` +
           Object.keys(KINDS).filter((k) => openBy[k]).map((k) => `<span>${esc(KINDS[k].label)}: <strong>${openBy[k]}</strong> open</span>`).join("");
         const rows = filtered();
-        $("resultLine").textContent = `${rows.length} ${rows.length === 1 ? "item" : "items"} match these filters.`;
+        $("resultLine").textContent = `${rows.length} ${rows.length === 1 ? "item matches" : "items match"} these filters.`;
         $("items").innerHTML = rows.slice(0, STATE.shown).map(card).join("") || `<p class="empty panel">Nothing left here. Try another filter.</p>`;
         $("showMore").hidden = rows.length <= STATE.shown;
         rows.slice(0, STATE.shown).forEach(wire);
