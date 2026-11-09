@@ -406,7 +406,7 @@
         <!-- ---------- Task 1: download ---------- -->
         <div class="panel" role="tabpanel" id="panel-download" aria-labelledby="tab-download" hidden>
           <h3 tabindex="-1">Download targets and interventions</h3>
-          <p class="lede">Choose a dataset, narrow it down if you need to, and download it as a spreadsheet (CSV, which opens in Excel).</p>
+          <p class="lede">Choose a dataset, narrow it down if you need to, and download it as an Excel spreadsheet. A Read me tab in each file lists the filters you used and how to use the data with care.</p>
           <div id="dlSetNotice"></div>
           <div class="steps">
             <div class="step">
@@ -827,7 +827,8 @@
         const dates = [...providers, ...interventions].map((x) => x.updated_at).filter(Boolean).sort();
         return {
           providers: providers.map((p) => ({
-            ukprn: p.ukprn, name: p.name, region: p.region || "", rap: p.rap || "", mission: p.mission_group || "",
+            ukprn: p.ukprn, name: p.name, region: p.region || "", rap: p.rap || "", mission: p.mission_group || "", mission2: p.mission_group2 || "",
+            missions: [p.mission_group, p.mission_group2].filter(Boolean),
             students: p.ug_students, lat: p.lat, lng: p.lng, plan_url: p.plan_url || "", plan_period: p.plan_period || "",
             profile: p.profile || {}
           })),
@@ -965,7 +966,7 @@
           group: () => makeSelect("Student group", GROUPS.map((g) => [g.key, g.label]), "All student groups"),
           region: () => makeSelect("Region", uniq(STATE.providers.map((p) => p.region)).map((r) => [r, r]), "All regions"),
           rap: () => makeSelect("Regional access partnership", uniq(STATE.providers.map((p) => p.rap)).map((r) => [r, r]), "All partnerships", "(proposed)"),
-          mission: () => makeSelect("Mission group", [...uniq(STATE.providers.map((p) => p.mission)).map((m) => [m, m]), ["__none", "No mission group"]], "All providers"),
+          mission: () => makeSelect("Mission group", [...uniq(STATE.providers.flatMap((p) => p.missions)).map((m) => [m, m]), ["__none", "No mission group"]], "All providers"),
           size: () => makeSelect("Provider size", SIZE_BANDS.map((b) => [b.key, b.label]), "All sizes", "(undergraduates)"),
           provider: () => { const c = makeProviderCombo("Provider", "(type to search)", changed); return { wrap: c.wrap, ctrl: c }; }
         };
@@ -982,6 +983,13 @@
         }
         area.querySelector(".toolbar button").addEventListener("click", () => { reset(); onChange(); });
         function reset() { Object.values(els).forEach((el) => { el.value = ""; }); updateApplied(); }
+        // The filters in use, as [name, chosen value] pairs, for the download's Read me tab
+        function describe() {
+          return Object.entries(els).filter(([, el]) => el.value.trim()).map(([k, el]) => {
+            const o = el.options ? el.options[el.selectedIndex] : null;
+            return [FILTER_NAMES[k], o ? (o.dataset.base || o.text) : el.value.trim()];
+          });
+        }
         // Put values in from another task; only the filters this area has
         function set(values) {
           Object.entries(values).forEach(([k, v]) => { if (els[k] && v !== undefined) els[k].value = v || ""; });
@@ -992,24 +1000,24 @@
         function markProvider(p) {
           ["region", "rap", "mission", "size"].forEach((k) => {
             const sel = els[k]; if (!sel || !sel.options) return;
-            const own = !p ? null : k === "mission" ? (p.mission || "__none") : p[k];
+            const own = !p ? [] : k === "mission" ? (p.missions.length ? p.missions : ["__none"]) : [p[k]];
             [...sel.options].forEach((o) => {
               if (!o.value) return;
               const base = o.dataset.base || o.text;
-              o.text = p && o.value === own ? `${base} (${p.name})` : base;
+              o.text = p && own.includes(o.value) ? `${base} (${p.name})` : base;
             });
           });
         }
         updateApplied();
-        return { els, get, reset, set, markProvider };
+        return { els, get, reset, set, markProvider, describe };
       }
       function providerPasses(p, f, set) {
         if (!p) return false;
         if (set && !set.ukprns.has(p.ukprn)) return false;
         if (f.region && p.region !== f.region) return false;
         if (f.rap && p.rap !== f.rap) return false;
-        if (f.mission === "__none" && p.mission) return false;
-        if (f.mission && f.mission !== "__none" && p.mission !== f.mission) return false;
+        if (f.mission === "__none" && p.missions.length) return false;
+        if (f.mission && f.mission !== "__none" && !p.missions.includes(f.mission)) return false;
         if (f.size && p.size !== f.size) return false;
         if (f.provider && !p.name.toLowerCase().includes(f.provider.toLowerCase())) return false;
         return true;
@@ -1034,12 +1042,12 @@
       }
 
       // ---------------------------------------------------------------
-      // CSV
+      // Spreadsheet downloads
       // ---------------------------------------------------------------
       const TARGET_COLUMNS = [
         ["provider", (t) => STATE.byUk[t.ukprn].name], ["ukprn", (t) => t.ukprn],
         ["region", (t) => STATE.byUk[t.ukprn].region], ["regional_access_partnership", (t) => STATE.byUk[t.ukprn].rap],
-        ["mission_group", (t) => STATE.byUk[t.ukprn].mission], ["plan_period", (t) => STATE.byUk[t.ukprn].plan_period],
+        ["mission_group", (t) => STATE.byUk[t.ukprn].mission], ["mission_group_2", (t) => STATE.byUk[t.ukprn].mission2], ["plan_period", (t) => STATE.byUk[t.ukprn].plan_period],
         ["reference", (t) => t.ref], ["lifecycle_stage", (t) => t.stage], ["characteristic", (t) => t.characteristic],
         ["target_group", (t) => t.target_group], ["comparator_group", (t) => t.comparator], ["aim", (t) => t.aim],
         ["description", (t) => t.description], ["data_source", (t) => t.data_source], ["units", (t) => t.units],
@@ -1049,7 +1057,7 @@
       const INTERVENTION_COLUMNS = [
         ["provider", (i) => STATE.byUk[i.ukprn].name], ["ukprn", (i) => i.ukprn],
         ["region", (i) => STATE.byUk[i.ukprn].region], ["regional_access_partnership", (i) => STATE.byUk[i.ukprn].rap],
-        ["mission_group", (i) => STATE.byUk[i.ukprn].mission], ["intervention", (i) => i.name], ["activity_status", (i) => i.status],
+        ["mission_group", (i) => STATE.byUk[i.ukprn].mission], ["mission_group_2", (i) => STATE.byUk[i.ukprn].mission2], ["intervention", (i) => i.name], ["activity_status", (i) => i.status],
         ["description", (i) => i.description], ["intervention_strategies", (i) => i.strategies.join("; ")],
         ["students_targeted", (i) => i.students], ["student_group_codes", (i) => i.groups.join("; ")],
         ["lifecycle_stages", (i) => i.stages.join("; ")], ["linked_targets", (i) => i.target_refs.join("; ")],
@@ -1057,18 +1065,96 @@
         ["risks_to_equality_of_opportunity", (i) => i.risks.join("; ")], ["plan_page", (i) => i.page ?? ""], ["awaiting_review", (i) => (i.awaiting ? "Yes" : "No")],
         ["plan_url", (i) => STATE.byUk[i.ukprn].plan_url]
       ];
-      function downloadCSV(rows, columns, filename) {
-        // Collapse newlines and runs of whitespace to a single space, so every field stays on one
-        // line and each downloaded row has a consistent height (all the text is still there, just not wrapped).
-        const cell = (v) => `"${String(v ?? "").replace(/\s+/g, " ").trim().replace(/"/g, '""')}"`;
-        const text = [columns.map((c) => c[0]).join(","), ...rows.map((r) => columns.map((c) => cell(c[1](r))).join(","))].join("\r\n");
-        const blob = new Blob(["﻿" + text], { type: "text/csv;charset=utf-8" });
+      // Downloads are Excel files (.xlsx) with two tabs: "Read me" (what was downloaded, the
+      // filters used, and the use-with-care notes from this page) and "Data". The file is built
+      // here in the browser: a minimal Office Open XML workbook in an uncompressed zip.
+      const CRC_TABLE = (() => {
+        const t = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+        return t;
+      })();
+      function crc32(b) { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC_TABLE[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+      function zipFiles(files) {
+        const enc = new TextEncoder(), parts = [], central = [];
+        let offset = 0;
+        files.forEach(({ name, text }) => {
+          const n = enc.encode(name), d = enc.encode(text), crc = crc32(d);
+          const h = new DataView(new ArrayBuffer(30));
+          h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(12, 0x21, true);
+          h.setUint32(14, crc, true); h.setUint32(18, d.length, true); h.setUint32(22, d.length, true); h.setUint16(26, n.length, true);
+          parts.push(new Uint8Array(h.buffer), n, d);
+          const c = new DataView(new ArrayBuffer(46));
+          c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(14, 0x21, true);
+          c.setUint32(16, crc, true); c.setUint32(20, d.length, true); c.setUint32(24, d.length, true); c.setUint16(28, n.length, true); c.setUint32(42, offset, true);
+          central.push(new Uint8Array(c.buffer), n);
+          offset += 30 + n.length + d.length;
+        });
+        const size = central.reduce((t, a) => t + a.length, 0);
+        const e = new DataView(new ArrayBuffer(22));
+        e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, offset, true);
+        return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      }
+      const xmlEsc = (t) => t.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+      const colName = (i) => { let s = ""; for (i++; i; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + ((i - 1) % 26)) + s; return s; };
+      // rows: arrays of cells; a cell is a value, or { v, s } where s is a style (1 bold, 2 wrapped, 3 heading)
+      function sheetXml(rows, widths, freezeHeader) {
+        const view = freezeHeader ? `<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>` : "";
+        const cols = `<cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols>`;
+        const body = rows.map((r, ri) => `<row r="${ri + 1}">${r.map((cell, ci) => {
+          const { v, s } = cell !== null && typeof cell === "object" ? cell : { v: cell, s: 0 };
+          const ref = colName(ci) + (ri + 1), st = s ? ` s="${s}"` : "";
+          if (typeof v === "number" && isFinite(v)) return `<c r="${ref}"${st}><v>${v}</v></c>`;
+          const t = String(v ?? "");
+          return t ? `<c r="${ref}" t="inlineStr"${st}><is><t xml:space="preserve">${xmlEsc(t)}</t></is></c>` : "";
+        }).join("")}</row>`).join("");
+        return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${view}${cols}<sheetData>${body}</sheetData></worksheet>`;
+      }
+      function readmeRows(meta, rows) {
+        const out = [[{ v: "APP Explorer download", s: 3 }], []];
+        const add = (a, b) => out.push([{ v: a, s: 1 }, { v: b, s: 2 }]);
+        const head = (t) => { out.push([]); out.push([{ v: t, s: 3 }]); };
+        add("Dataset", meta.dataset);
+        add("Records", `${fmt(rows.length)} rows from ${plural(new Set(rows.map((r) => r.ukprn)).size, "provider")}`);
+        add("Downloaded", new Date().toLocaleString("en-GB", { dateStyle: "long", timeStyle: "short" }));
+        add("Source", location.origin + location.pathname);
+        head("Filters used to create this spreadsheet");
+        if (meta.filters.length) meta.filters.forEach(([k, v]) => add(k, v));
+        else add("None", "No filters were applied: this is every record in the dataset.");
+        const notes = (selector, title) => {
+          const items = [...document.querySelectorAll(selector)].filter((li) => !li.querySelector("a"));
+          if (!items.length) return;
+          head(title);
+          items.forEach((li) => {
+            const strong = li.querySelector("strong"), lead = strong ? strong.textContent.trim() : "";
+            add(lead.replace(/\.$/, ""), li.textContent.replace(lead, "").replace(/\s+/g, " ").trim());
+          });
+        };
+        notes("#use-with-care li", "Use with care");
+        notes("#methods li", "How the data was made");
+        return out;
+      }
+      function downloadData(rows, columns, filename, meta) {
+        // Collapse newlines and runs of whitespace to a single space, so every row has a consistent height
+        const clean = (v) => (typeof v === "number" ? v : String(v ?? "").replace(/\s+/g, " ").trim());
+        const data = [columns.map((c) => ({ v: c[0], s: 1 })), ...rows.map((r) => columns.map((c) => clean(c[1](r))))];
+        const sheets = [["Read me", sheetXml(readmeRows(meta, rows), [34, 110], false)], ["Data", sheetXml(data, columns.map(() => 22), true)]];
+        const blob = zipFiles([
+          { name: "[Content_Types].xml", text: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}</Types>` },
+          { name: "_rels/.rels", text: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+          { name: "xl/workbook.xml", text: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map(([n], i) => `<sheet name="${n}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join("")}</sheets></workbook>` },
+          { name: "xl/_rels/workbook.xml.rels", text: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join("")}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+          { name: "xl/styles.xml", text: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="14"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="4"><xf fontId="0"/><xf fontId="1" applyFont="1"><alignment vertical="top" wrapText="1"/></xf><xf fontId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf><xf fontId="2" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` },
+          ...sheets.map(([, xml], i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`, text: xml }))
+        ]);
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = filename;
         document.body.append(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
       }
+      const selText = (id) => { const el = $(id); const o = el && el.options ? el.options[el.selectedIndex] : null; return o && o.value ? (o.dataset.base || o.text) : ""; };
+      const setFilter = (set) => (set ? [["Providers", `Only ${set.label}`]] : []);
+      const DATASET_NAMES = { targets: "APP targets (one row per target)", interventions: "APP interventions (one row per planned activity)" };
       const today = () => new Date().toISOString().slice(0, 10);
 
       // ---------------------------------------------------------------
@@ -1080,12 +1166,13 @@
         dl = buildFilters($("dlFilterArea"), ["stage", "group", "region", "rap", "mission", "size", "provider"], renderDownload);
         document.querySelectorAll('input[name="dlDataset"]').forEach((r) => r.addEventListener("change", renderDownload));
         $("dlFiltered").addEventListener("click", () => {
-          const { rows, cols, name } = downloadSelection();
-          downloadCSV(rows, cols, `${name}-filtered-${today()}.csv`);
+          const { rows, cols, name, ds } = downloadSelection();
+          downloadData(rows, cols, `${name}-filtered-${today()}.xlsx`, { dataset: DATASET_NAMES[ds], filters: [...dl.describe(), ...setFilter(SETS.download)] });
         });
         $("dlAll").addEventListener("click", () => {
-          if (dlDataset() === "targets") downloadCSV(STATE.targets, TARGET_COLUMNS, `app-targets-all-${today()}.csv`);
-          else downloadCSV(STATE.interventions, INTERVENTION_COLUMNS, `app-interventions-all-${today()}.csv`);
+          const meta = { dataset: DATASET_NAMES[dlDataset()], filters: [] };
+          if (dlDataset() === "targets") downloadData(STATE.targets, TARGET_COLUMNS, `app-targets-all-${today()}.xlsx`, meta);
+          else downloadData(STATE.interventions, INTERVENTION_COLUMNS, `app-interventions-all-${today()}.xlsx`, meta);
         });
         $("dlToMap").addEventListener("click", () => {
           openMapWith(dlDataset(), dl.get(), SETS.download);
@@ -1144,7 +1231,19 @@
         $("sameStage").addEventListener("change", updateSameFromGap);
         $("sameGroup").addEventListener("change", updateSameFromGap);
         document.querySelectorAll('input[name="sameMatch"]').forEach((r) => r.addEventListener("change", renderSameResults));
-        $("sameDownload").addEventListener("click", () => downloadCSV(sameMatches(), TARGET_COLUMNS, `app-targets-matching-${today()}.csv`));
+        $("sameDownload").addEventListener("click", () => {
+          const c = sameCriteria() || {}, f = [["Task", "Find providers with similar targets"]];
+          if (sameSelected && sameSelected.provider) f.push(["Starting provider", sameSelected.provider.name]);
+          if (sameSelected && sameSelected.target) {
+            f.push(["Starting target", `${sameSelected.target.ref}: ${sameSelected.target.aim || ""}`.trim()]);
+            f.push(["Match", document.querySelector('input[name="sameMatch"]:checked').value === "exact" ? "Same target group only" : "Any target for this student group"]);
+          }
+          const st = STAGES.find((x) => x.key === c.stage), gr = GROUPS.find((x) => x.key === c.group);
+          if (st) f.push(["Lifecycle stage", st.label]);
+          if (gr) f.push(["Student group", gr.label]);
+          if ($("sameSimilar").checked) f.push(["Similar student population", `Yes: within ${SIMILAR_RANGE} percentage points of the starting provider`]);
+          downloadData(sameMatches(), TARGET_COLUMNS, `app-targets-matching-${today()}.xlsx`, { dataset: DATASET_NAMES.targets, filters: [...f, ...same.describe()] });
+        });
         $("sameToGap").addEventListener("click", () => {
           const c = sameCriteria(); if (!c) return;
           const set = sameSet();
@@ -1277,7 +1376,10 @@
         $("gapFilterArea").querySelector(".filter-grid").append(search);
         ["gapStage", "gapGroup"].forEach((id) => $(id).addEventListener("change", () => { gapShown = 25; renderGap(); }));
         $("gapSearch").addEventListener("input", () => { gapShown = 25; renderGap(); });
-        $("gapDownload").addEventListener("click", () => downloadCSV(gapRows(), INTERVENTION_COLUMNS, `app-interventions-${today()}.csv`));
+        $("gapDownload").addEventListener("click", () => {
+          const f = [["Lifecycle stage", selText("gapStage")], ["Student group", selText("gapGroup")], ["Search", ($("gapSearch").value || "").trim()]].filter(([, v]) => v);
+          downloadData(gapRows(), INTERVENTION_COLUMNS, `app-interventions-${today()}.xlsx`, { dataset: DATASET_NAMES.interventions, filters: [...f, ...gap.describe(), ...setFilter(SETS.gap)] });
+        });
         $("gapToMap").addEventListener("click", () => {
           openMapWith("interventions", { ...gap.get(), stage: $("gapStage").value, group: $("gapGroup").value }, SETS.gap);
         });
@@ -1497,7 +1599,7 @@
             ? sel.rows.map((t) => `<li><strong>${esc(t.ref)}</strong> <span class="tag stage">${esc(stageLabel(t.stageKey))}</span><span class="tag group">${esc(targetGroupText(t))}</span><br><span class="meta">${esc(t.aim)}</span></li>`).join("")
             : sel.rows.map((i) => `<li style="margin-bottom:.6rem"><strong>${esc(i.name)}</strong><br><span class="meta">For: ${esc(i.students)}</span><br>${planLink(p, i.page, true)}</li>`).join("");
           side.innerHTML = `<h4>${esc(p.name)}</h4>
-            <p class="meta">${esc(p.region)}${p.rap ? ` &middot; ${esc(p.rap)} partnership` : ""}${p.mission ? ` &middot; ${esc(p.mission)}` : ""}</p>
+            <p class="meta">${esc(p.region)}${p.rap ? ` &middot; ${esc(p.rap)} partnership` : ""}${p.missions.length ? ` &middot; ${esc(p.missions.join(" and "))}` : ""}</p>
             <p>${planLink(p)}</p>
             <p><strong>${plural(sel.rows.length, "matching " + noun[0], "matching " + noun[1])}</strong></p>
             <ul class="linked">${items}</ul>
