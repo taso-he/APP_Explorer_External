@@ -128,6 +128,7 @@
         .item-head { flex-wrap: wrap; }
       }
       @media (max-width: 460px) { .filters { grid-template-columns: 1fr; } }
+          .check-all { display: flex; align-items: center; gap: .4rem; flex-basis: 100%; font-size: .92rem; }
     </style>
   </head>
   <body>
@@ -230,6 +231,16 @@
         "Mental health", "Ongoing impacts of coronavirus", "Cost pressures", "Capacity issues", "Progression from higher education"]
         .map((name, n) => [`EORR Risk ${n + 1} – ${name}`, `${n + 1}. ${name}`]);
       const STATE = { items: [], records: {}, plans: {}, targets: {}, byProvider: {}, shown: 25 };
+      // Fields set once for a whole intervention strategy: one decision can cover every open item
+      // for the same field in the same strategy of the same provider
+      const STRATEGY_FIELDS = new Set(["risks_to_equality_of_opportunity", "linked_target_ids", "lifecycle_stages"]);
+      function strategySiblings(i) {
+        if (i.kind !== "field" || !STRATEGY_FIELDS.has(i.field)) return [];
+        const strat = (STATE.records[i.record_id] || {}).intervention_strategy || "";
+        if (!strat) return [];
+        return STATE.items.filter((o) => o !== i && o.status === "open" && o.kind === "field" && o.field === i.field
+          && o.ukprn === i.ukprn && ((STATE.records[o.record_id] || {}).intervention_strategy || "") === strat);
+      }
 
       // ---------- Session (Supabase email sign-in links) ----------
       function saveSession(s) { try { localStorage.setItem(STORE, JSON.stringify(s)); } catch (e) {} STATE.session = s; }
@@ -380,7 +391,7 @@
         const valueKinds = i.kind === "field" || i.kind === "sample";
         const name = i.intervention || rec.intervention_name || "(no name)";
         const decided = i.status !== "open";
-        const label = { accepted: k.accept, rejected: k.reject, edited: "Edited", closed: "Closed: the record was removed, so no decision is needed" }[i.status];
+        const label = { accepted: k.accept, rejected: k.reject, edited: "Edited", closed: i.note ? "Closed" : "Closed: the record was removed, so no decision is needed" }[i.status];
         return `<article class="item${decided ? " done" : ""}" id="item-${esc(i.check_id)}">
           <div class="item-head">
             <div>
@@ -407,6 +418,8 @@
             <button class="button ghost" type="button" data-d="reject">${esc(k.reject)}</button>
             ${k.edit ? `<button class="button ghost" type="button" data-edit>Edit the value</button>` : ""}
             <input class="note" type="text" placeholder="Note (optional)" aria-label="Note for ${esc(name)}">
+            ${(() => { const n = decided ? 0 : strategySiblings(i).length; return n ? `<label class="check-all"><input type="checkbox" data-all checked>
+              Apply the same decision to the ${n} other open ${n === 1 ? "item" : "items"} for this field in this strategy</label>` : ""; })()}
           </div>
           ${k.edit ? `<div class="editor" hidden>
               ${editorFor(i)}
@@ -523,12 +536,18 @@
       function showErr(el, text) { const e = el.querySelector("[data-err]"); e.hidden = false; e.textContent = text; }
       async function decide(i, decision, value, note) {
         const el = $(`item-${i.check_id}`);
+        const all = el.querySelector("[data-all]");
+        const group = [i, ...(all && all.checked ? strategySiblings(i) : [])];
         el.querySelectorAll("button").forEach((b) => { b.disabled = true; });
         try {
-          await api("/rest/v1/rpc/decide_check", { method: "POST",
-            body: JSON.stringify({ p_check_id: i.check_id, p_decision: decision, p_value: value, p_note: note }) });
-          const [fresh] = await api(`/rest/v1/qa_person_checks?select=*&check_id=eq.${encodeURIComponent(i.check_id)}`);
-          Object.assign(i, fresh);
+          for (const g of group) {
+            const n = g === i ? note : [`Decided for the whole strategy, with ${i.intervention || "another record"}`, note].filter(Boolean).join(". ");
+            await api("/rest/v1/rpc/decide_check", { method: "POST",
+              body: JSON.stringify({ p_check_id: g.check_id, p_decision: decision, p_value: value, p_note: n }) });
+          }
+          const ids = group.map((g) => `"${g.check_id}"`).join(",");
+          const fresh = await api(`/rest/v1/qa_person_checks?select=*&check_id=in.(${encodeURIComponent(ids)})`);
+          fresh.forEach((f) => { const g = group.find((x) => x.check_id === f.check_id); if (g) Object.assign(g, f); });
           render();
         } catch (err) {
           el.querySelectorAll("button").forEach((b) => { b.disabled = false; });
