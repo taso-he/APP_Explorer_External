@@ -88,10 +88,11 @@
 
       .hero {
         display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
-        gap: clamp(1.2rem, 4vw, 3rem); padding: 1.4rem 0 1.5rem; align-items: center;
+        gap: clamp(1.2rem, 4vw, 3rem); padding: .75rem 0 1.5rem; align-items: start;
       }
       h1 { margin: 0 0 .5rem; font-size: clamp(1.8rem, 3.6vw, 2.6rem); line-height: 1.1; letter-spacing: 0; }
       .hero p { max-width: 62ch; font-size: 1.02rem; margin: .4rem 0 0; color: rgba(255,255,255,.94); }
+      .hero .beta-note { margin-bottom: 1.5rem; }
       .pilot-panel {
         align-self: end; padding: 1rem 1.1rem; border: 1px solid rgba(255,255,255,.3);
         background: rgba(15,40,71,.18); border-radius: 8px;
@@ -446,7 +447,7 @@
         <div class="hero">
           <div>
             <h1>Exploring access and participation plans</h1>
-            <p><em><strong>Beta:</strong> This tool is still in development and is not a final product.</em></p>
+            <p class="beta-note"><em><strong>Beta:</strong> This tool is still in development and is not a final product.</em></p>
             <p>English higher education providers – who are registered with the Office for Students (OfS) in the <a href="https://www.officeforstudents.org.uk/for-providers/registering-with-the-ofs/registration-with-the-ofs-a-guide/"
    style="color: #ffffff; text-decoration: underline; text-decoration-thickness: 1px;">
   approved (fee cap) category
