@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Exploring access and participation plans | TASO APP Explorer</title>
+    <title>Exploring access and participation plans | TASO APP Explorer Beta</title>
     <meta name="description" content="Find, compare, map and download the targets and interventions in English higher education providers' Access and Participation Plans.">
     <script>
       if (new URLSearchParams(window.location.search).get("embed") === "1") {
@@ -12,8 +12,8 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Neuton:wght@400&amp;display=swap" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23214eab'/%3E%3Cpath d='M8 22h16M9 17h10M9 12h14' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='22' r='3' fill='%2307dbb3'/%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Neuton:wght@400;700&amp;display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%233b66bc'/%3E%3Cpath d='M8 22h16M9 17h10M9 12h14' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='22' r='3' fill='%2307dbb3'/%3E%3C/svg%3E">
     <style>
       :root {
         color-scheme: light;
@@ -24,10 +24,10 @@
         --line: #e4e2d9;
         --line-strong: #74706d;
         --brand: #3b66bc;
-        --brand-dark: #173a82;
-        --accent: #f9466c;
-        --highlight: #91e9d2;
-        --green: #03b594;
+        --brand-dark: #0f2847;
+        --accent: #07dbb3;
+        --highlight: #07dbb3;
+        --green: #07dbb3;
         --peacock: #07dbb3;
         --surface: #ffffff;
         --bg: #ffffff;
@@ -36,7 +36,7 @@
 }
       
 
-      * { box-sizing: border-box; }
+      * { box-sizing: border-box; font-family: "Barlow", Arial, Helvetica, sans-serif; }
       html { scroll-behavior: smooth; }
       body {
         margin: 0;
@@ -138,10 +138,10 @@
       .metric strong { display: block; font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.1; }
 
       .notice {
-        border-left: 5px solid var(--accent); background: #fff2f5; padding: .85rem 1rem;
+        border-left: 5px solid var(--accent); background: var(--soft); padding: .85rem 1rem;
         border-radius: 4px; margin: 1rem 0;
       }
-      .notice.info { border-left-color: var(--brand); background: #eef3fc; }
+      .notice.info { border-left-color: var(--brand); background: #dbe3f4; }
 
       /* ---------- Task chooser (tabs) ---------- */
       .tasks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-top: 1.1rem; }
@@ -151,7 +151,7 @@
         border-radius: 8px; background: white; color: var(--ink); cursor: pointer; box-shadow: var(--shadow);
       }
       .task:hover { border-color: var(--brand); }
-      .task[aria-selected="true"] { border-color: var(--brand); background: #eef3fc; }
+      .task[aria-selected="true"] { border-color: var(--brand); background: #dbe3f4; }
       .task .num { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brand); }
       .task .title { font-weight: 700; font-size: 1.1rem; line-height: 1.25; }
       .task .who { font-size: .93rem; color: var(--muted); }
@@ -164,7 +164,7 @@
       .panel-head { display: flex; justify-content: space-between; gap: 1rem; align-items: start; flex-wrap: wrap; }
       .steps { display: grid; gap: 1.1rem; margin-top: 1rem; }
       .step { border-left: 4px solid var(--peacock); padding: .2rem 0 .2rem 1rem; min-width: 0; }
-      .step-label { display: block; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--green); margin-bottom: .2rem; }
+      .step-label { display: block; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brand); margin-bottom: .2rem; }
 
       fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
       legend { font-weight: 700; padding: 0; margin-bottom: .4rem; }
@@ -187,7 +187,7 @@
       caption { text-align: left; padding: .6rem .8rem; font-weight: 700; }
       th, td { padding: .6rem .75rem; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
       th { position: sticky; top: 0; z-index: 1; background: var(--soft); font-size: .9rem; }
-      tr.selected td { background: #eef3fc; }
+      tr.selected td { background: #dbe3f4; }
 
       .cards { display: grid; gap: .8rem; margin-top: .9rem; }
       .card { border: 1px solid var(--line); border-radius: 8px; padding: .9rem 1rem; background: white; }
@@ -200,8 +200,8 @@
         display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px;
         padding: .1rem .55rem; background: white; font-size: .85rem; margin: .15rem .25rem .15rem 0;
       }
-      .tag.stage { border-color: #5ca6f3; background: #eef6fe; }
-      .tag.group { border-color: var(--green); background: #e9fbf6; }
+      .tag.stage { border-color: var(--brand); background: #dbe3f4; }
+      .tag.group { border-color: var(--green); background: #dbe3f4; }
       .tag.awaiting { border-color: #b26b00; background: #fff4e0; color: #6b4000; font-weight: 600; }
       .tag.risk { border-color: #c9c4b8; background: var(--soft-2); }
       .target-choice { display: grid; gap: .5rem; margin-top: .6rem; }
@@ -219,12 +219,12 @@
 
       /* ---------- Map ---------- */
       .map-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); gap: 1rem; margin-top: 1rem; }
-      .map-box { position: relative; border: 1px solid var(--line); border-radius: 8px; background: #f3f8fd; overflow: hidden; }
+      .map-box { position: relative; border: 1px solid var(--line); border-radius: 8px; background: #dbe3f4; overflow: hidden; }
       #ukMap { display: block; width: 100%; height: auto; max-height: 640px; touch-action: none; }
       #ukMap path, #ukMap circle { vector-effect: non-scaling-stroke; }
-      #ukMap .region { fill: #dfe8f5; stroke: #ffffff; stroke-width: 1.2; cursor: pointer; }
-      #ukMap .region:hover { fill: #c9d8ef; }
-      #ukMap .region.active { fill: #b7f0e2; stroke: var(--green); stroke-width: 2; }
+      #ukMap .region { fill: #dbe3f4; stroke: #ffffff; stroke-width: 1.2; cursor: pointer; }
+      #ukMap .region:hover { fill: #3b66bc; }
+      #ukMap .region.active { fill: #07dbb3; stroke: var(--green); stroke-width: 2; }
       #ukMap .outline { fill: #eceae3; stroke: none; }
       #ukMap .dot { fill: var(--brand); fill-opacity: .72; stroke: white; stroke-width: 1; cursor: pointer; }
       #ukMap .dot:hover, #ukMap .dot.on { fill: var(--accent); fill-opacity: .95; }
@@ -245,7 +245,7 @@
       .guide-box ul { margin: .4rem 0 0; padding-left: 1.15rem; }
       .guide-box li { margin-bottom: .45rem; }
       .guide-box.warn { border-top: 5px solid var(--accent); }
-      .guide-box.method { border-top: 5px solid var(--brand); }
+      .guide-box.method { border-top: 5px solid #07dbb3; }
       .guide-box.more { border-top: 5px solid var(--green); }
       .guide-stack { display: grid; gap: 1rem; align-content: start; }
       .feedback-box p { margin: .3rem 0 .8rem; }
@@ -285,7 +285,7 @@
         box-shadow: var(--shadow); max-height: 280px; overflow: auto; font-weight: 400;
       }
       .combo-list li { padding: .5rem .75rem; cursor: pointer; }
-      .combo-list li[aria-selected="true"], .combo-list li:hover { background: #eef3fc; color: var(--brand-dark); }
+      .combo-list li[aria-selected="true"], .combo-list li:hover { background: #dbe3f4; color: var(--brand-dark); }
       .combo-list .none { color: var(--muted); cursor: default; }
 
       /* ---------- Collapsible filters ---------- */
@@ -300,7 +300,7 @@
       .filter-body { margin-top: .8rem; }
 
       /* ---------- Provider set carried between tasks ---------- */
-      .set-notice { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; border-left: 5px solid var(--green); background: #e9fbf6; padding: .7rem 1rem; border-radius: 4px; margin: .8rem 0; }
+      .set-notice { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; border-left: 5px solid var(--green); background: #dbe3f4; padding: .7rem 1rem; border-radius: 4px; margin: .8rem 0; }
       .jump-row { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--line); }
       .jump-row .label { width: 100%; font-weight: 700; font-size: .95rem; }
       .panel { scroll-margin-top: 1rem; }
@@ -309,7 +309,7 @@
       .card-head h4 { margin: 0; }
       td .button { white-space: nowrap; }
       .chosen { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; justify-content: space-between; align-items: center;
-        border: 2px solid var(--brand); background: #eef3fc; border-radius: 8px; padding: .8rem 1rem; }
+        border: 2px solid var(--brand); background: #dbe3f4; border-radius: 8px; padding: .8rem 1rem; }
       .chosen-label { display: block; font-size: .85rem; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .2rem; }
       dialog#feedbackDialog { width: min(560px, calc(100% - 32px)); border: 0; border-radius: 10px; padding: 1.4rem 1.5rem; box-shadow: var(--shadow); color: var(--ink); }
       dialog#feedbackDialog::backdrop { background: rgba(15, 40, 71, .55); }
@@ -320,16 +320,50 @@
       .fb-error { color: #b00020; font-weight: 600; margin: 0; }
       #fbFields input, #fbFields textarea { font-weight: 400; }
           /* Design review: technical-guide palette and confirmed TASO typography.
-         Navy #0f2847; blue #3b66bc; deep rose #f9466c;
-         light blue #dbe3f4; green #03b594; peacock #07dbb3. */
+         Navy #0f2847; blue accent #3b66bc; peacock accent #07dbb3;
+         light blue background #dbe3f4. */
       header { overflow: hidden; }
       .topbar {
         background: white; box-shadow: 0 0 0 100vmax white;
         clip-path: inset(0 -100vmax); border-bottom: 0; flex-wrap: wrap;
+        position: relative; padding-bottom: calc(.8rem + 4px);
+        display: grid; grid-template-columns: auto 1fr; align-items: center;
+        gap: .65rem 1.5rem;
       }
-      .brand-mark { color: var(--ink); }
+      .topbar::after {
+        content: ""; position: absolute; bottom: 0; left: 50%;
+        width: 100vw; height: 4px; transform: translateX(-50%);
+        background: linear-gradient(to right, #07dbb3, #3b66bc);
+        pointer-events: none;
+      }
+      .brand-mark { color: var(--brand); font-size: 1.5rem; font-weight: 700; letter-spacing: normal; }
+      .beta-badge {
+        display: inline-block; padding: .15rem .5rem; border-radius: 4px;
+        background: #07dbb3; color: #0f2847; font-size: .8rem;
+        line-height: 1.4; font-weight: 700; white-space: nowrap;
+      }
+      .brand-logo { width: 92px; height: 42px; object-fit: contain; }
+      .homepage-link {
+        display: inline-flex; align-items: center; gap: .4rem; min-height: 44px;
+        color: var(--brand); font-size: 1.15rem; font-weight: 600; text-decoration: none;
+      }
+      .homepage-link svg { width: 24px; height: 24px; flex-shrink: 0; }
+      .homepage-link:hover { text-decoration: underline; }
       .topbar nav a { color: var(--brand); }
       .topbar nav a:hover, .topbar nav a:focus { color: var(--ink); }
+      .topbar-left { flex-wrap: nowrap; }
+      .topbar-right { display: contents; }
+      .section-links {
+        padding: .5rem 0 0;
+      }
+      .section-links ul { justify-content: flex-end; gap: 1.25rem; }
+      .section-links a {
+        display: inline-flex; align-items: center; min-height: 40px;
+        padding: .25rem 0; font-weight: 600; color: white;
+      }
+      .section-links a:hover, .section-links a:focus-visible {
+        color: white; text-decoration: underline;
+      }
       .header-links {
         display: flex; align-items: center; justify-content: flex-end;
         flex-wrap: wrap; gap: .3rem .65rem; margin-left: auto;
@@ -342,21 +376,37 @@
       .header-links a:hover { text-decoration: underline; }
       .header-links .social-link { min-width: 44px; }
       .header-links svg { width: 20px; height: 20px; flex-shrink: 0; }
-      .header-links .homepage-link { padding-left: .65rem; }
-      h1, h2 { font-family: "Neuton", Georgia, serif; font-weight: 400; }
-      h1 { font-size: 21px; line-height: 23px; letter-spacing: normal; text-transform: none; }
+      h1, h1 *, h2, h2 * { font-family: "Neuton", Georgia, serif; font-weight: 400; }
+      h1 { font-size: clamp(32px, 4vw, 44px); line-height: 1.1; font-weight: 700; letter-spacing: normal; text-transform: none; }
       h2 { font-size: 15px; line-height: 18px; letter-spacing: .14em; text-transform: uppercase; }
+      #tasks-heading, #guide-heading {
+        font-family: "Neuton", Georgia, serif;
+        color: #3b66bc;
+        font-size: clamp(28px, 3vw, 34px);
+        line-height: 1.15;
+        font-weight: 700;
+        letter-spacing: normal;
+        text-transform: none;
+      }
       .pilot-panel { background: #dbe3f4; color: var(--ink); border-color: #dbe3f4; }
       .pilot-panel strong, .hero .pilot-panel p { color: var(--ink); }
       .pilot-panel a { color: var(--brand); }
       .pilot-panel a:hover { background: white; color: var(--ink); }
       .notice.info, .task[aria-selected="true"], tr.selected td,
       .combo-list li[aria-selected="true"], .combo-list li:hover { background: #dbe3f4; }
+      table, caption, tbody, td { background: #edebe3; }
+      tr.selected td { background: #edebe3; }
       th { background: var(--brand); color: white; }
       th a, th button, th .link-button { color: white; }
-      @media (max-width: 560px) {
+      @media (max-width: 900px) {
+        .topbar { grid-template-columns: 1fr; }
         .header-links { margin-left: 0; justify-content: flex-start; }
-        .header-links .homepage-link { padding-left: 0; }
+      }
+      @media (max-width: 560px) {
+        .topbar { display: flex; align-items: stretch; }
+        .topbar-left { flex-wrap: wrap; }
+        .section-links ul { justify-content: flex-start; }
+        .header-links { margin-left: 0; justify-content: flex-start; }
       }
     </style>
   </head>
@@ -368,27 +418,35 @@
         <div class="topbar">
           <div class="topbar-left">
             <div class="brand-mark">
-              <span>TASO APP Explorer</span>
+              <img class="brand-logo" src="https://taso-he.github.io/technicalguide/images/logo_transp.png" alt="TASO" width="92" height="42">
+              <span>APP Explorer</span>
+              <span class="beta-badge">Beta</span>
             </div>
-            <nav aria-label="Page sections">
-              <ul>
-                <li><a href="#tasks">Explore the data</a></li>
-                <li><a href="#more">Find out more</a></li>
-              </ul>
-            </nav>
+            <a class="homepage-link" href="https://taso.org.uk/">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m2 11 10-9 10 9M5 9v12h14V9M16 3h3v5"/></svg>
+              Home
+            </a>
           </div>
+          <div class="topbar-right">
           <nav class="header-links" aria-label="TASO links">
             <a href="https://taso.org.uk/newsletter/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m3 6 9 7 9-7M3 18l6-6m12 6-6-6"/></svg><span>Sign up for our newsletter</span></a>
             <a class="social-link" href="https://github.com/taso-he/technicalguide" aria-label="TASO technical guides on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.55v-2.14c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.95.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.16 1.18a10.95 10.95 0 0 1 5.75 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.24 2.75.12 3.04.73.8 1.18 1.82 1.18 3.08 0 4.42-2.69 5.4-5.25 5.68.41.36.78 1.06.78 2.14v3.16c0 .3.21.66.79.55A11.5 11.5 0 0 0 12 .7Z"/></svg></a>
             <a class="social-link" href="https://x.com/taso_he" aria-label="TASO on X"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l8.2-9.4L.8 2h6.5l4.5 6.7L18.9 2Zm-1.1 18h1.7L6.4 3.9H4.6L17.8 20Z"/></svg></a>
             <a class="social-link" href="https://uk.linkedin.com/company/taso" aria-label="TASO on LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M20.45 2H3.55C2.69 2 2 2.68 2 3.52v16.96c0 .84.69 1.52 1.55 1.52h16.9c.86 0 1.55-.68 1.55-1.52V3.52c0-.84-.69-1.52-1.55-1.52ZM7.93 18.75H4.98V9.2h2.95v9.55ZM6.45 7.89a1.71 1.71 0 1 1 0-3.42 1.71 1.71 0 0 1 0 3.42Zm12.3 10.86H15.8V14.1c0-1.11-.02-2.54-1.55-2.54-1.55 0-1.79 1.21-1.79 2.46v4.73H9.51V9.2h2.83v1.3h.04c.39-.74 1.36-1.53 2.79-1.53 2.98 0 3.58 1.96 3.58 4.51v5.27Z"/></svg></a>
-            <a class="homepage-link" href="https://taso.org.uk/">TASO homepage</a>
           </nav>
+          </div>
         </div>
 
+        <nav class="section-links" aria-label="Page sections">
+          <ul>
+            <li><a href="#tasks">Explore the data</a></li>
+            <li><a href="#more">Find out more</a></li>
+          </ul>
+        </nav>
         <div class="hero">
           <div>
             <h1>Exploring access and participation plans</h1>
+            <p><em><strong>Beta:</strong> This tool is still in development and is not a final product.</em></p>
             <p>English higher education providers – who are registered with the Office for Students (OfS) in the <a href="https://www.officeforstudents.org.uk/for-providers/registering-with-the-ofs/registration-with-the-ofs-a-guide/"
    style="color: #ffffff; text-decoration: underline; text-decoration-thickness: 1px;">
   approved (fee cap) category
@@ -605,7 +663,7 @@
             <fieldset>
               <legend>Show areas by</legend>
               <div class="radio-row">
-                <label><input type="radio" name="mapAreas" value="region" checked> OfS region</label>
+                <label><input type="radio" name="mapAreas" value="region" checked> English region</label>
                 <label><input type="radio" name="mapAreas" value="rap"> Regional access partnership</label>
               </div>
             </fieldset>
@@ -1650,15 +1708,15 @@
           $("mapClear").addEventListener("click", () => { mapSelected = null; renderMap(); });
           return;
         }
-        // Overview, summarised by OfS region or by partnership
+        // Overview, summarised by English region or by partnership
         const key = mode === "rap" ? "rap" : "region";
         const counts = {};
         list.forEach((x) => { const k = x.p[key] || "Not stated"; counts[k] = counts[k] || { providers: 0, records: 0 }; counts[k].providers++; counts[k].records += x.rows.length; });
         const records = list.reduce((a, x) => a + x.rows.length, 0);
         side.innerHTML = `<h4>${mapArea ? esc(mapArea) : "England"}</h4>
           <p>${plural(list.length, "provider")} with ${plural(records, "matching " + noun[0], "matching " + noun[1])}.</p>
-          <table style="min-width:0"><caption class="sr-only">Providers by ${key === "rap" ? "regional access partnership" : "OfS region"}</caption>
-            <thead><tr><th scope="col">${key === "rap" ? "Partnership" : "OfS region"}</th><th scope="col">Providers</th><th scope="col">${ds === "targets" ? "Targets" : "Activities"}</th></tr></thead>
+          <table style="min-width:0"><caption class="sr-only">Providers by ${key === "rap" ? "regional access partnership" : "English region"}</caption>
+            <thead><tr><th scope="col">${key === "rap" ? "Partnership" : "English region"}</th><th scope="col">Providers</th><th scope="col">${ds === "targets" ? "Targets" : "Activities"}</th></tr></thead>
             <tbody>${Object.keys(counts).sort().map((k) => `<tr><td>${esc(k)}</td><td>${counts[k].providers}</td><td>${counts[k].records}</td></tr>`).join("")}</tbody></table>
           <p class="hint" style="margin-top:.6rem">Choose a dot on the map, or a provider in the table below it, to see its records.</p>`;
       }
