@@ -748,12 +748,6 @@
             </ul>
           </article>
           <div class="guide-stack">
-          <article class="guide-box more" id="cite" aria-labelledby="cite-heading">
-            <h3 id="cite-heading">How to cite the APP Explorer</h3>
-            <p id="citeText" class="cite-text">Transforming Access and Student Outcomes in Higher Education (TASO) (2026) <em>TASO APP Explorer: exploring access and participation plans</em>. [Website]. Available at: https://taso-he.github.io/APP_Explorer_External/ (Accessed: <span data-cite-today></span>).</p>
-            <p class="hint" style="margin:.3rem 0 .6rem">Please also give the date the data was last updated (<span data-cite-updated></span>), as the data changes over time.</p>
-            <button class="button ghost small" type="button" id="citeCopy">Copy citation</button> <span class="hint" id="citeDone" role="status"></span>
-          </article>
           <article class="guide-box more" id="more">
             <h3>Find out more</h3>
             <ul>
@@ -766,6 +760,11 @@
             <h3 id="feedback-heading">Give us feedback</h3>
             <p>Spotted an error, or used the APP Explorer in your work? We'd like to hear from you.</p>
             <button class="button primary" type="button" data-feedback>Give feedback</button>
+          </article>
+          <article class="guide-box more" id="cite" aria-labelledby="cite-heading">
+            <h3 id="cite-heading">How to cite the APP Explorer</h3>
+            <p id="citeText" class="cite-text">Transforming Access and Student Outcomes in Higher Education (TASO) (2026) <em>TASO APP Explorer: exploring access and participation plans</em>. [Website]. Available at: https://taso-he.github.io/APP_Explorer_External/ (Accessed: <span data-cite-today></span>).</p>
+            <button class="button ghost small" type="button" id="citeCopy">Copy citation</button> <span class="hint" id="citeDone" role="status"></span>
           </article>
           </div>
         </div>
@@ -997,13 +996,11 @@
         $("mInterventions").textContent = fmt(STATE.interventions.length);
         const citeDate = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
         document.querySelectorAll("[data-cite-today]").forEach((e) => { e.textContent = citeDate(new Date()); });
-        document.querySelectorAll("[data-cite-updated]").forEach((e) => { e.textContent = STATE.meta.as_of ? citeDate(new Date(STATE.meta.as_of)) : "see the top of the page"; });
         const copyBtn = $("citeCopy");
         if (copyBtn && !copyBtn.dataset.wired) {
           copyBtn.dataset.wired = "1";
           copyBtn.addEventListener("click", async () => {
-            const text = $("citeText").textContent.replace(/\s+/g, " ").trim()
-              + (STATE.meta.as_of ? ` Data last updated ${citeDate(new Date(STATE.meta.as_of))}.` : "");
+            const text = $("citeText").textContent.replace(/\s+/g, " ").trim();
             try { await navigator.clipboard.writeText(text); $("citeDone").textContent = "Copied."; }
             catch (e) { $("citeDone").textContent = "Copy didn't work: please select the text above and copy it."; }
           });
