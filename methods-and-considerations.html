@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Methods and considerations | TASO APP Explorer</title>
+    <meta name="description" content="How TASO assembled and checked the APP Explorer data, and what to consider when using it.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Neuton:wght@400&amp;display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%233b66bc'/%3E%3Cpath d='M8 22h16M9 17h10M9 12h14' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='22' r='3' fill='%2307dbb3'/%3E%3C/svg%3E">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #0f2847;
+        --muted: #485866;
+        --brand: #3b66bc;
+        --accent: #07dbb3;
+        --soft: #dbe3f4;
+        --line: #e4e2d9;
+        --focus: #ffbf47;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: white;
+        font: 1.0625rem/1.5 "Barlow", Arial, Helvetica, sans-serif;
+      }
+      a { color: var(--brand); }
+      a:hover { color: var(--ink); text-decoration-thickness: 2px; }
+      a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+      .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+      .skip-link {
+        position: absolute; left: 1rem; top: 1rem; z-index: 2;
+        padding: .75rem 1rem; background: var(--brand); color: white;
+        transform: translateY(calc(-100% - 1.25rem));
+      }
+      .skip-link:focus { transform: none; color: white; }
+      header { overflow: hidden; background: var(--ink); color: white; }
+      .topbar {
+        display: grid; grid-template-columns: auto 1fr; align-items: center;
+        gap: .65rem 1.5rem; position: relative; padding: .8rem 0 calc(.8rem + 4px);
+        background: white; box-shadow: 0 0 0 100vmax white; clip-path: inset(0 -100vmax);
+      }
+      .topbar::after {
+        content: ""; position: absolute; bottom: 0; left: 50%; width: 100vw;
+        height: 4px; transform: translateX(-50%);
+        background: linear-gradient(to right, var(--accent), var(--brand));
+        pointer-events: none;
+      }
+      .topbar-left { display: flex; align-items: center; gap: .6rem 2rem; }
+      .topbar-right { display: contents; }
+      .brand-mark {
+        display: inline-flex; align-items: center; gap: .7rem;
+        color: var(--brand); font-size: 1.5rem; font-weight: 700; text-decoration: none;
+      }
+      .brand-mark:hover { color: var(--ink); text-decoration: underline; }
+      .brand-logo { width: 92px; height: 42px; object-fit: contain; }
+      .beta-badge {
+        padding: .15rem .5rem; border-radius: 4px; color: var(--ink);
+        background: var(--accent); font-size: .8rem; line-height: 1.4; white-space: nowrap;
+      }
+      .homepage-link, .header-links a {
+        display: inline-flex; align-items: center; gap: .4rem; min-height: 44px;
+        color: var(--brand); font-weight: 600; text-decoration: none;
+      }
+      .homepage-link { font-size: 1.15rem; }
+      .homepage-link svg { width: 24px; height: 24px; flex-shrink: 0; }
+      .header-links { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .3rem .65rem; }
+      .header-links a { justify-content: center; gap: .3rem; font-size: .95rem; }
+      .header-links a:hover, .homepage-link:hover { color: var(--ink); text-decoration: underline; }
+      .header-links .social-link { min-width: 44px; }
+      .header-links svg { width: 20px; height: 20px; flex-shrink: 0; }
+      .hero { padding: 1rem 0 1.6rem; }
+      .hero-links {
+        display: flex; flex-wrap: wrap; justify-content: flex-end;
+        column-gap: 1.25rem; text-align: end;
+      }
+      .hero-links a {
+        display: inline-block; padding: .5rem 0; color: white;
+        font-size: .95rem; font-weight: 600; text-decoration: none;
+      }
+      .hero-links a:hover { color: var(--soft); }
+      h1, h2 { font-family: "Neuton", Georgia, serif; font-weight: 400; }
+      h1 { margin: .45rem 0 0; font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.1; }
+      h2 { margin: 0 0 .85rem; color: var(--brand); font-size: clamp(1.75rem, 3vw, 2.125rem); line-height: 1.15; }
+      h3 { margin: 1.4rem 0 .5rem; font-size: 1.2rem; line-height: 1.25; }
+      .page-layout {
+        display: grid; grid-template-columns: minmax(12rem, .32fr) minmax(0, 1fr);
+        align-items: start; gap: clamp(1.5rem, 4vw, 4rem); padding: 2rem 0 3rem;
+      }
+      .contents {
+        border: 1px solid var(--line); border-top: 5px solid var(--accent);
+        border-radius: 8px; background: var(--soft); padding: 1rem 1.1rem;
+      }
+      .contents h2 { margin-bottom: .55rem; color: var(--ink); font: 700 1.125rem/1.3 "Barlow", Arial, sans-serif; }
+      .contents ul { margin: 0; padding: 0; list-style: none; }
+      .contents a { display: inline-block; padding: .25rem 0; color: var(--ink); }
+      .article { max-width: 76ch; }
+      .article section + section { border-top: 1px solid var(--line); margin-top: 2rem; padding-top: 1.65rem; }
+      .article h2 { scroll-margin-top: 1rem; }
+      .article p { margin: 0 0 .85rem; }
+      .article p:last-child { margin-bottom: 0; }
+      .article ul, .article ol { margin: 0 0 .85rem; padding-left: 1.5rem; }
+      .article li + li { margin-top: .35rem; }
+      table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 1rem 0; }
+      th, td {
+        padding: .65rem .75rem; border: 1px solid var(--line); text-align: left;
+        vertical-align: top; overflow-wrap: anywhere;
+      }
+      thead th { color: white; background: var(--brand); }
+      thead th:first-child { width: 38%; }
+      tbody th, tbody td { background: #edebe3; }
+      .citation-link { overflow-wrap: anywhere; }
+      footer { color: var(--muted); }
+      footer p { margin: 0; }
+      .licence-footer {
+        padding: 1.6rem 0 1.8rem; border-top: 5px solid var(--accent);
+        color: var(--ink); background: var(--soft);
+      }
+      .licence-footer h2 { margin-bottom: .65rem; color: var(--ink); font-size: 1.375rem; }
+      .licence-details { display: grid; gap: .75rem; }
+      .licence-badge { display: block; width: 107px; max-width: 100%; height: auto; }
+      @media (max-width: 900px) {
+        .topbar { grid-template-columns: 1fr; }
+        .header-links { justify-content: flex-start; }
+      }
+      @media (max-width: 700px) {
+        .page-layout { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 560px) {
+        .topbar-left { flex-wrap: wrap; }
+        th, td { padding: .5rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to the content</a>
+    <header>
+      <div class="shell">
+        <div class="topbar">
+          <div class="topbar-left">
+            <a class="brand-mark" href="index.html">
+              <img class="brand-logo" src="https://taso-he.github.io/technicalguide/images/logo_transp.png" alt="TASO" width="92" height="42">
+              <span>APP Explorer</span>
+              <span class="beta-badge">Beta</span>
+            </a>
+            <a class="homepage-link" href="https://taso.org.uk/">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m2 11 10-9 10 9M5 9v12h14V9M16 3h3v5"/></svg>
+              Home
+            </a>
+          </div>
+          <div class="topbar-right">
+          <nav class="header-links" aria-label="TASO links">
+            <a href="https://taso.org.uk/newsletter/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m3 6 9 7 9-7M3 18l6-6m12 6-6-6"/></svg><span>Sign up for our newsletter</span></a>
+            <a class="social-link" href="https://github.com/taso-he/technicalguide" aria-label="TASO technical guides on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.55v-2.14c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.95.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.16 1.18a10.95 10.95 0 0 1 5.75 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.24 2.75.12 3.04.73.8 1.18 1.82 1.18 3.08 0 4.42-2.69 5.4-5.25 5.68.41.36.78 1.06.78 2.14v3.16c0 .3.21.66.79.55A11.5 11.5 0 0 0 12 .7Z"/></svg></a>
+            <a class="social-link" href="https://x.com/taso_he" aria-label="TASO on X"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l8.2-9.4L.8 2h6.5l4.5 6.7L18.9 2Zm-1.1 18h1.7L6.4 3.9H4.6L17.8 20Z"/></svg></a>
+            <a class="social-link" href="https://uk.linkedin.com/company/taso" aria-label="TASO on LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M20.45 2H3.55C2.69 2 2 2.68 2 3.52v16.96c0 .84.69 1.52 1.55 1.52h16.9c.86 0 1.55-.68 1.55-1.52V3.52c0-.84-.69-1.52-1.55-1.52ZM7.93 18.75H4.98V9.2h2.95v9.55ZM6.45 7.89a1.71 1.71 0 1 1 0-3.42 1.71 1.71 0 0 1 0 3.42Zm12.3 10.86H15.8V14.1c0-1.11-.02-2.54-1.55-2.54-1.55 0-1.79 1.21-1.79 2.46v4.73H9.51V9.2h2.83v1.3h.04c.39-.74 1.36-1.53 2.79-1.53 2.98 0 3.58 1.96 3.58 4.51v5.27Z"/></svg></a>
+          </nav>
+          </div>
+        </div>
+        <div class="hero">
+          <nav class="hero-links" aria-label="Explorer pages">
+            <a href="index.html">Back to the APP Explorer</a>
+            <a href="faqs.html">FAQ</a>
+          </nav>
+          <h1>Methods and considerations</h1>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell page-layout" id="main" tabindex="-1">
+      <nav class="contents" aria-labelledby="contents-heading">
+        <h2 id="contents-heading">On this page</h2>
+        <ul>
+          <li><a href="#introduction-heading">Introduction</a></li>
+          <li><a href="#working-with-ai-heading">Our considered approach to working with AI</a></li>
+          <li><a href="#targets-heading">Targets</a></li>
+          <li><a href="#interventions-heading">Interventions</a></li>
+          <li><a href="#provider-information-heading">Provider information</a></li>
+          <li><a href="#lifecycle-stages-and-student-groups-heading">Lifecycle stages and student groups</a></li>
+          <li><a href="#considerations-heading">Considerations</a></li>
+          <li><a href="#updates-corrections-and-feedback-heading">Updates, corrections and feedback</a></li>
+          <li><a href="#acknowledgements-heading">Acknowledgements</a></li>
+          <li><a href="#citation-heading">Citation</a></li>
+          <li><a href="#creative-commons-heading">Creative Commons</a></li>
+        </ul>
+      </nav>
+
+      <article class="article">
+        <section aria-labelledby="introduction-heading">
+          <h2 id="introduction-heading">Introduction</h2>
+          <p>This note explains how the data in The TASO APP Explorer was put together, how it was checked, and what it can and can't tell you. It's written for anyone using the data in their own work, including analysts downloading the full datasets.</p>
+          <p>The TASO APP Explorer is a searchable database that brings together targets, planned interventions,  and provider information from English higher education providers’ access and participation plans (APPs). It allows you to filter, compare, map, and download APP data across the sector. It is designed to  support collaboration and shared learning across the sector by making it easier to find information about other providers working on similar gaps or activities.</p>
+          <p>The APP Explorer brings together three sets of information from English higher education providers' APPs:</p>
+          <ul>
+            <li><strong>Targets:</strong> the targets each provider has set, from the standard target tables in its plan.</li>
+            <li><strong>Interventions:</strong> the activities each provider plans to deliver, from the activity tables in its intervention strategies.</li>
+            <li><strong>Provider information:</strong> where each provider is based, its mission group and student population demographics, and a link to its plan.</li>
+          </ul>
+          <p>The tool covers providers with an APP published by the Office for Students (OfS). It reflects the most recent plans available on the OfS website as of 10 August 2026, alongside a small number of older plans (marked as past plans) so that every published target and intervention remains searchable. Please always check the<a href="https://www.officeforstudents.org.uk/for-providers/equality-of-opportunity/search-for-access-and-participation-plans/#/AccessPlans/"> OfS website</a> for the most up-to-date information on APPs. </p>
+        </section>
+
+        <section aria-labelledby="working-with-ai-heading">
+          <h2 id="working-with-ai-heading">Our considered approach to working with AI</h2>
+          <p>By harnessing Artificial Intelligence (AI) for this project, we have been able to bring together large, non-standardised datasets (as no two APPs have exactly the same structure) in a way that would have been unfeasible before. Using AI to categorise and organise descriptive information that university staff have already written plays directly to its strengths, allowing the data to be searched, compared, and filtered easily. Furthermore, for repetitive data-checking tasks, AI models can surpass manual human review by delivering greater consistency and reducing the risk of human fatigue. </p>
+          <p>At the same time, as with any methodology, we recognise that AI carries certain risks—such as the potential to perpetuate biases present in the underlying training data. Anticipating these challenges is precisely why we have designed the robust quality assurance framework detailed in this document. Through the rigorous verification processes we have applied, we are confident that the data is consistent, reliable, and fit for its intended purpose on this site. We have also built in the ability for users to provide feedback, so that we can further update and correct any mistakes that are discovered. </p>
+          <p>Throughout this work, human expertise has remained firmly at the helm, steering the direction of the project and ensuring we are deliberate about where AI has a place and where it does not. We have used AI strictly to structure what providers have already written. We have not used it to prescribe the targets or interventions an institution should adopt. Those are decisions for institutions and the people who understand their own students, informed by evidence and by the staff closest to the work.</p>
+        </section>
+
+        <section aria-labelledby="targets-heading">
+          <h2 id="targets-heading">Targets</h2>
+          <h3>Where they come from</h3>
+          <p>Every APP sets out its targets in a standard set of tables required by the OfS: access targets, success targets (continuation, completion and attainment) and progression targets. The dataset holds one row per target, with the provider's own wording for each field, including:</p>
+          <ul>
+            <li>the lifecycle stage and the student characteristic the target relates to</li>
+            <li>the target group and comparator group</li>
+            <li>the aim, and the provider's description and commentary</li>
+            <li>the data source, baseline year and value, target value and target year</li>
+            <li>whether the target is collaborative.</li>
+          </ul>
+          <p>The targets were first extracted from the plan PDFs using AI, which read the target tables and structured them into the fields available in this dataset. This process was completed to build the Open APP Explorer (open-app.co.uk), which TASO's tool builds on.</p>
+          <p>Plans added after that first extraction, for example where a provider has since published a new plan, had their targets read directly from the plan's target tables by a Python script, without AI, and were checked against the plan in the same way. Where a provider publishes a new plan, the targets from its earlier plan are kept and marked as a past plan.</p>
+          <h3>How they were checked</h3>
+          <p>Because the target tables follow a standard format, every target could be checked against its plan without using AI. A Python script reads the target tables directly from each current plan's PDF and compared every field of every target with the dataset.</p>
+          <ul>
+            <li><strong>99.3% of fields matched the plan</strong>  exactly, or differed only in spacing, punctuation or a standard label.</li>
+            <li><strong>Every difference was checked by a person</strong> against the plan, and the dataset was corrected where it was wrong. In total, 151 fields were corrected across 80 targets.</li>
+            <li><strong>Plans the script couldn't read</strong>, for example where target tables were published as images, were checked by a person.</li>
+          </ul>
+          <p>The most common corrections were text placed in the wrong field (for example, a description entered as the comparator group), values cut short, and numbers given to more decimal places than the plan.</p>
+          <h3>Standard labels</h3>
+          <p>Providers describe the same groups in different ways, so each target also has a standard label for its characteristic, target group and comparator group (for example, "IMD quintile 1 and 2"). These are used for filtering. The provider's own wording is kept alongside them in the downloads.</p>
+          <p>Where a plan leaves a field blank or gives only a general term such as "Other", the page shows the standard label instead, so that the target can still be found by filters.</p>
+        </section>
+
+        <section aria-labelledby="interventions-heading">
+          <h2 id="interventions-heading">Interventions</h2>
+          <h3>Where they come from</h3>
+          <p>Each APP sets out one or more intervention strategies, and each strategy includes a table of the activities the provider plans to deliver. The interventions dataset holds one record for each activity in those tables, excluding research and monitoring activities. It does not include activities or financial support described only elsewhere in a plan.</p>
+          <p>Where the same activity appears in the tables of two strategies, it is usually recorded once and linked to both. In a few plans that repeat an activity with different wording in each strategy, it is recorded once for each strategy. Each record includes:</p>
+          <ul>
+            <li>the activity's name and its description, in the plan's words</li>
+            <li>the strategy or strategies it belongs to</li>
+            <li>who it is for, in the plan's words, and the student groups this covers</li>
+            <li>the lifecycle stage(s) it addresses</li>
+            <li>the targets it is linked to, and the risks to equality of opportunity it addresses</li>
+            <li>the page of the plan where it appears.</li>
+          </ul>
+          <p>The interventions were extracted from the plan PDFs using AI (OpenAI's GPT-4.1 mini), following detailed written instructions on what to extract and how. Unlike the target tables, activity tables vary a great deal between plans, so the extraction involves more judgement and was checked more closely.</p>
+          <p>For a small number of plans, the AI extraction could not capture every activity reliably. Examples include plans whose activity tables give no names for activities, plans where a single record merged several activities, and plans published after the main extraction. For these, the activities were recorded directly from the plan's tables, one record per activity, and every record was marked for review. The same applies to a few records that were corrected or split by hand before the second check described below.</p>
+          <h3>How they were checked</h3>
+          <p>The interventions went through three layers of checking:</p>
+          <ol>
+            <li><strong>People checked a pilot set by hand.</strong> The TASO team working on this project checked every field of every record for an initial group of 5 providers against their plans. This set the rules for what counts as correct, for example how risks should be recorded and which lifecycle stages an activity takes.</li>
+            <li><strong>A second AI model checked every field.</strong> A separate model (Anthropic's Opus 5.5 through Claude) reviewed each record against the relevant pages of the plan. For every correction it made, it had to quote the plan and give the page, with a subsequent python script then being used to check that the quote appeared on that page. Where the quote was found, the correction was applied. Where the quote couldn't be found, or the model reported a lack of confidence, the field was passed to a person to decide. Furthermore, a random selection of one in ten fields that were changed between the two AI models were also checked by a person as a test of the model's accuracy, along with every correction quoting a scanned page that the script couldn’t read. </li>
+            <li><strong>People decided where the checks disagreed.</strong> Where the automated check and the hand-checking disagreed, a person decided which was right and recorded the decision, so the same rule is applied across all plans.</li>
+          </ol>
+          <p>Page numbers were also checked by a script that finds each activity in the plan's text.</p>
+          <p>Before the second check, a script also corrected page numbers by finding each activity in the plan's text, added risks that were missing from records covering more than one strategy, and removed links to targets that are not in the provider's targets list.</p>
+          <p>Across all 267 providers, the second model reviewed 6,154 records, giving a verdict on 67,694 fields. It judged 74% of fields correct as extracted, corrected 25% and was unsure about 1%. The plans were reviewed in two rounds, 67 providers in October 2026 and the remaining 200 in November 2026, using the same rules.</p>
+          <p>Most corrections were applied automatically, because the model's quote was found in the plan. The rest came to a person: 1,559 items in total. These were 1,120 fields the model was unsure about or whose quote couldn't be found, 266 records set aside as not interventions, 54 possible duplicates, 5 records the model was unsure were interventions, and 114 table rows the model thought had no record. Of the 114, 84 were confirmed as missing and added. For the fields the model was unsure about, each case was considered and then accepted, edited or rejected by a person.</p>
+          <p>A further 1,795 applied corrections, picked at random, were set aside for spot-checking as a test of the model's accuracy. Of the 1,119 that were checked (the rest were closed because their records were later removed or merged), 75% were confirmed, 14% were edited and 11% were reverted. An edit usually meant the model's correction was in the right direction but needed refining; a reversion meant the original extraction was better. The checks were weighted towards the fields most likely to need judgement, so accuracy is best read by field. The model's corrections were confirmed as correct in 96% of checks for descriptions and whether groups were combined, 94% for names, 88% for strategies, 87% for students targeted and 84% for risks. Accuracy was lower for the fields that involve the most judgement: lifecycle stages (69%), student group codes (67%) and linked targets (65%). </p>
+          <p>The team then made targeted fixes across the whole dataset, aimed at the patterns found in the checks. Based on the scale of these fixes, accuracy is estimated to have risen to around 80% for lifecycle stages, 75–80% for student group codes and 85–90% for linked targets. These are estimates rather than measured figures. They assume most of the fixes corrected errors of the kind found in the checks. Lifecycle stages, student group codes and linked targets remain the fields with most uncertainty, because placing a provider's activity into standard categories involves judgement. Users should check the provider's own wording, which is kept in every record.</p>
+        </section>
+
+        <section aria-labelledby="provider-information-heading">
+          <h2 id="provider-information-heading">Provider information</h2>
+          <table>
+            <thead>
+            <tr><th scope="col">Information</th><th scope="col">Source</th></tr>
+            </thead>
+            <tbody>
+            <tr><th scope="row">Provider name and UK region</th><td>OfS Register of higher education providers</td></tr>
+            <tr><th scope="row">Number of undergraduates, and the share in each student group (for example mature students, IMD quintiles 1 and 2, disabled students)</th><td>OfS size and shape of provision data - 2026 release, downloaded November 2026</td></tr>
+            <tr><th scope="row">Mission group</th><td>Published membership lists of each mission group - created in August 2026. Providers that belong to two mission groups are listed under both.</td></tr>
+            <tr><th scope="row">Location on the map</th><td>The provider's postcode, located using postcodes.io</td></tr>
+            <tr><th scope="row">Regional access partnership</th><td>The provider's local authority, matched to the proposed partnership areas (<a href="https://www.officeforstudents.org.uk/for-providers/equality-of-opportunity/regional-access-partnerships/proposed-regions/">OfS, 2026</a>). These are proposals and may change.</td></tr>
+            </tbody>
+          </table>
+          <p>Providers are grouped into four sizes by their number of undergraduates: under 1,000; 1,000 to 4,999; 5,000 to 14,999; and 15,000 or more.</p>
+          <p>When finding providers with the same target, users can choose to see only providers with a similar share of the same student group. "Similar" means within 5 percentage points of the chosen provider's share of undergraduates.</p>
+          <p>We have counted APPs in scope if they were found on the <a href="https://www.officeforstudents.org.uk/for-providers/equality-of-opportunity/search-for-access-and-participation-plans/#/AccessPlans/">Office for Students website</a>, with a plan that has dates going over the current academic year 2026/27. The most recent plans were included and no institution had more than one plan included. Changes to providers that has not been updated on these OfS APP pages will therefore also not be reflected in our extractions. </p>
+        </section>
+
+        <section aria-labelledby="lifecycle-stages-and-student-groups-heading">
+          <h2 id="lifecycle-stages-and-student-groups-heading">Lifecycle stages and student groups</h2>
+          <p>Targets and interventions describe stages and groups in different ways. To let users filter both together, each record is placed into standard groups. The original wording is always kept.</p>
+          <p><strong>Lifecycle stages:</strong> pre-entry attainment (raising attainment in schools), access, transition into higher education, continuation, completion, attainment (degree outcomes) and progression. A small number of targets cover "success" without naming a stage; these are shown as "Success (not split by stage)". Interventions that the plan says cover the whole student lifecycle appear under every stage.</p>
+          <p><strong>Student groups:</strong></p>
+          <table>
+            <thead>
+            <tr><th scope="col">Group</th><th scope="col">Includes</th></tr>
+            </thead>
+            <tbody>
+            <tr><th scope="row">Ethnicity</th><td>All ethnicity targets and activities, including global ethnic majority groups</td></tr>
+            <tr><th scope="row">Area-based disadvantage</th><td>IMD, TUNDRA, POLAR and other neighbourhood measures</td></tr>
+            <tr><th scope="row">Disability</th><td>Disability, including mental health conditions and neurodivergence</td></tr>
+            <tr><th scope="row">Age</th><td>Mature and young students</td></tr>
+            <tr><th scope="row">Free school meals</th><td>Eligibility for free school meals, including pupil premium</td></tr>
+            <tr><th scope="row">Low income</th><td>Household income measures and economically disadvantaged students</td></tr>
+            <tr><th scope="row">Sex</th><td>Male and female students</td></tr>
+            <tr><th scope="row">Care experienced and estranged</th><td>Care-experienced and estranged students</td></tr>
+            <tr><th scope="row">Entry qualifications or route</th><td>For example, students entering with BTECs</td></tr>
+            <tr><th scope="row">Intersections</th><td>Targets for groups defined by more than one characteristic</td></tr>
+            <tr><th scope="row">Other groups</th><td>For example, first-generation students, carers, student parents, refugees, and groups specific to one plan</td></tr>
+            <tr><th scope="row">All students</th><td>Activities open to all students</td></tr>
+            </tbody>
+          </table>
+          <p>An intervention can belong to more than one group. Where an activity names a group that doesn't fit these, it is placed in "Other groups", and its own wording is kept.</p>
+        </section>
+
+        <section aria-labelledby="considerations-heading">
+          <h2 id="considerations-heading">Considerations</h2>
+          <p><strong>Plans change after they are published.</strong> The data reflects each plan as published by the OfS when it was collected. Formal variations to APPs may not be captured, depending on when they were published. Providers may also have adjusted the details of their interventions in response to new insight, without changing their published plan.</p>
+          <p><strong>Plans describe intentions, not delivery or impact.</strong> The data shows what providers planned to do and the targets they set. It does not show whether activities were delivered, or how well they worked. For evidence on what works, see <a href="https://taso.org.uk/evidence-toolkits/evidence-toolkit-student-access-success-and-progression/">TASO's evidence toolkit</a>.</p>
+          <p><strong>How much a plan says varies.</strong> Some plans describe many activities in detail, while others group activities together or describe them briefly. The number of targets or interventions a provider has reflects how its plan is written, and is not a measure of how much it does or how well.</p>
+          <p><strong>If a provider doesn't appear, that doesn't mean it isn't working on an issue.</strong> A provider might not appear when you filter by a student group or stage because:</p>
+          <ul>
+            <li>its plan describes the work in a different way, or groups it under another heading</li>
+            <li>the work is part of its wider practice, outside its APP.</li>
+          </ul>
+          <p><strong>Grouping involves judgement.</strong> Placing records into standard lifecycle stages and student groups makes it possible to filter across plans, but some records could reasonably sit in more than one group. Always check the provider's own wording, which is kept in every record and download.</p>
+          <p><strong>Errors are still possible.</strong> Every target and every intervention has been checked by either a person, multiple people, an AI model or multiple AI models. However, checking reduces errors rather than removing them entirely. AI can make mistakes and so can people. We have very high confidence levels in the targets data due to them being presented within APPs in a standardised way. For more details on our level of confidence about interventions data, please read the reported statistics within that section (above). Check the original plan before relying on any record; each record links to it.</p>
+          <h3>Using the data well</h3>
+          <ul>
+            <li><strong>Do</strong> use the data to find providers working on similar gaps, to learn from their approaches, and to plan collaboration, including across regions and partnerships.</li>
+            <li><strong>Do</strong> read records alongside the original plan, and get in touch with providers to understand their work.</li>
+            <li><strong>Don't</strong> use the data to rank or score providers, or as evidence about a provider's performance.</li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="updates-corrections-and-feedback-heading">
+          <h2 id="updates-corrections-and-feedback-heading">Updates, corrections and feedback</h2>
+          <p><strong>Updates.</strong> The targets and interventions data will be updated when the OfS publishes new or revised plans on an annual basis. Only newly created plans will have their details updated.  </p>
+          <p><strong>Corrections.</strong> If you spot an error, for example a target or activity recorded incorrectly for your institution, please tell us using the <a href="index.html#feedback-heading">feedback form</a>. We check each report against the plan and correct the data where needed.</p>
+          <p><strong>Feedback on how you use it.</strong> We'd also like to hear how you have used The APP Explorer in your work. This helps us show its value and decide what to develop next.</p>
+        </section>
+
+        <section aria-labelledby="acknowledgements-heading">
+          <h2 id="acknowledgements-heading">Acknowledgements</h2>
+          <p>The data is drawn from Access and Participation Plans and other data published by the Office for Students, used under the Open Government Licence v3.0. </p>
+          <p>The TASO APP Explorer builds on the original <a href="https://open-app.co.uk/">Open APP Explorer</a>, created by David Gilani, and on feedback from colleagues across the sector. </p>
+        </section>
+
+        <section aria-labelledby="citation-heading">
+          <h2 id="citation-heading">Citation</h2>
+          <p>Transforming Access and Student Outcomes in Higher Education (TASO) (2026) <em>The TASO APP Explorer: exploring access and participation plans</em>. [Website]. Available at: <a class="citation-link" href="index.html">https://taso-he.github.io/APP_Explorer_External/</a> (Accessed: <span id="access-date">day month year</span>). </p>
+        </section>
+      </article>
+    </main>
+
+    <footer>
+      <section class="licence-footer" aria-labelledby="creative-commons-heading">
+        <div class="shell">
+          <h2 id="creative-commons-heading">Creative Commons</h2>
+          <div class="licence-details">
+            <p>Contents of The APP Explorer are shared under a <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.en">Creative Commons Attribution–Non Commercial (CC BY-NC 4.0) licence</a>. This means anyone can share and adapt content freely, but must give appropriate attribution, provide a link to the licence, indicate any changes made, and must not use the content for commercial purposes.</p>
+            <img class="licence-badge" src="data:image/png;base64,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" alt="Creative Commons Attribution–NonCommercial badge" width="214" height="76">
+          </div>
+        </div>
+      </section>
+    </footer>
+
+    <script>
+      const date = new Date();
+      const accessDate = document.getElementById("access-date");
+      accessDate.textContent = date.toLocaleDateString("en-GB", {
+        day: "numeric", month: "long", year: "numeric"
+      });
+    </script>
+  </body>
+</html>
