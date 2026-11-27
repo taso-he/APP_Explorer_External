@@ -176,6 +176,15 @@
             <label>Provider <select id="fProvider"></select></label>
           </div>
         </div>
+        <details class="panel" id="instPanel" style="margin-top:1rem">
+          <summary><strong>Institutional contacts QA</strong> <span class="meta" id="instCount"></span></summary>
+          <p class="hint" style="margin:.5rem 0">Feedback from the pilot institutions on their own targets and interventions, sent from the TASO page. Mark each one as reviewed once you've dealt with it.</p>
+          <div class="filters" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+            <label>Status <select id="iStatus"><option value="New">New</option><option value="Reviewed">Reviewed</option><option value="">All</option></select></label>
+            <label>Institution <select id="iProvider"><option value="">All institutions</option></select></label>
+          </div>
+          <div class="items" id="instItems" style="margin-top:.8rem"></div>
+        </details>
         <p class="result-line" id="resultLine" aria-live="polite"></p>
         <div class="items" id="items"></div>
         <div class="more"><button class="button ghost" type="button" id="showMore" hidden>Show more</button></div>
@@ -219,7 +228,7 @@
         ["estranged", "Estranged"], ["carer", "Carers"], ["parents", "Parents"], ["military", "Military families"],
         ["gtrsb", "Gypsy, Roma, Traveller, Showman and Boater"], ["refugee_asylum", "Refugees and asylum seekers"],
         ["child_in_need", "Children in need"], ["ex_prisoner", "Ex-prisoners"], ["religion", "Religion"], ["commuter", "Commuter students"],
-        ["entry_route", "Entry qualifications or route"], ["all_students", "All students"], ["other", "Other (named in the plan)"]
+        ["entry_route", "Entry qualifications or route"], ["mode_of_study", "Mode of study (full-time or part-time)"], ["mental_health", "Mental health"], ["abcs", "ABCS (OfS combined measure)"], ["all_students", "All students"], ["other", "Other (named in the plan)"]
       ];
       const LIFECYCLE_CODES = [
         ["pre_entry_attainment", "Pre-entry attainment"], ["access", "Access"], ["transition", "Transition"],
@@ -554,6 +563,42 @@
           showErr(el, `That didn't save: ${err.message}`);
         }
       }
+
+      // ---------- Institutional contacts QA (pilot feedback from named institutions) ----------
+      const VERDICTS = { correct: "Looks correct", issue: "Something is wrong or missing", question: "Question" };
+      STATE.inst = [];
+      async function loadInst() {
+        try { STATE.inst = await fetchAll("/rest/v1/institutional_contacts_qa?select=*&order=created_at.desc"); }
+        catch (e) { $("instItems").innerHTML = `<p class="msg error">The institutional feedback couldn't be loaded: ${esc(e.message)}</p>`; return; }
+        const provs = [...new Set(STATE.inst.map((r) => r.provider).filter(Boolean))].sort();
+        $("iProvider").innerHTML = `<option value="">All institutions</option>` + provs.map((p) => `<option>${esc(p)}</option>`).join("");
+        ["iStatus", "iProvider"].forEach((id) => $(id).addEventListener("change", renderInst));
+        renderInst();
+      }
+      function renderInst() {
+        const st = $("iStatus").value, pv = $("iProvider").value;
+        const rows = STATE.inst.filter((r) => r.status !== "Test" && (!st || r.status === st) && (!pv || r.provider === pv));
+        const fresh = STATE.inst.filter((r) => r.status === "New").length;
+        $("instCount").textContent = `(${fresh} new, ${STATE.inst.filter((r) => r.status !== "Test").length} in total)`;
+        $("instItems").innerHTML = rows.map((r) => `<article class="item${r.status === "Reviewed" ? " done" : ""}" id="inst-${r.id}">
+            <span class="tag kind">${esc(r.item_type)}</span><span class="tag field">${esc(VERDICTS[r.verdict] || r.verdict)}</span>${r.status === "Reviewed" ? `<span class="tag done">Reviewed</span>` : ""}
+            <h2 style="font-size:1.05rem;margin:.3rem 0 0">${esc(r.item_id ? `${r.item_id}: ` : "")}${esc(r.item_label || "")}</h2>
+            <div class="meta">${esc(r.provider || r.ukprn)} &middot; ${new Date(r.created_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}${r.contact_name || r.contact_email ? ` &middot; ${esc([r.contact_name, r.contact_email].filter(Boolean).join(", "))}` : ""}</div>
+            ${r.comment ? `<blockquote>${esc(r.comment)}</blockquote>` : ""}
+            <div class="actions"><input class="note" type="text" placeholder="Team notes" value="${esc(r.team_notes || "")}" aria-label="Team notes">
+              <button class="button ${r.status === "Reviewed" ? "ghost" : "primary"}" type="button" data-inst="${r.id}">${r.status === "Reviewed" ? "Reopen" : "Mark as reviewed"}</button></div>
+          </article>`).join("") || `<p class="empty">Nothing here yet.</p>`;
+        $("instItems").querySelectorAll("[data-inst]").forEach((b) => b.addEventListener("click", async () => {
+          const r = STATE.inst.find((x) => String(x.id) === b.dataset.inst);
+          const notes = b.parentElement.querySelector(".note").value.trim() || null;
+          const status = r.status === "Reviewed" ? "New" : "Reviewed";
+          b.disabled = true;
+          try {
+            await api(`/rest/v1/institutional_contacts_qa?id=eq.${r.id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status, team_notes: notes }) });
+            Object.assign(r, { status, team_notes: notes }); renderInst();
+          } catch (e) { b.disabled = false; alert(`That didn't save: ${e.message}`); }
+        }));
+      }
       $("showMore").addEventListener("click", () => { STATE.shown += 25; render(); });
 
       // ---------- Start ----------
@@ -564,7 +609,7 @@
         $("signinView").hidden = true; $("queueView").hidden = false;
         $("whoEmail").hidden = $("signOut").hidden = false;
         $("whoEmail").textContent = emailFromToken(STATE.session.access_token);
-        try { await loadQueue(); }
+        try { await loadQueue(); loadInst(); }
         catch (err) {
           if (!STATE.session) return showSignin();
           $("loadError").hidden = false; $("loadError").textContent = `The review queue couldn't be loaded: ${err.message}`;
