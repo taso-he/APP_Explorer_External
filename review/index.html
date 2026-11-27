@@ -185,6 +185,15 @@
           </div>
           <div class="items" id="instItems" style="margin-top:.8rem"></div>
         </details>
+        <details class="panel" id="fbPanel" style="margin-top:1rem">
+          <summary><strong>Site feedback</strong> <span class="meta" id="fbCount"></span></summary>
+          <p class="hint" style="margin:.5rem 0">Feedback sent by anyone through the "Give feedback" form on the TASO page. Approve it if you'll act on it (for example, correcting a target), or decline it if not. Add a team note to record what you decided and why.</p>
+          <div class="filters" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+            <label>Status <select id="sfStatus"><option value="New">New</option><option value="Approved">Approved</option><option value="Declined">Declined</option><option value="">All</option></select></label>
+            <label>Type <select id="sfType"><option value="">All types</option></select></label>
+          </div>
+          <div class="items" id="fbItems" style="margin-top:.8rem"></div>
+        </details>
         <p class="result-line" id="resultLine" aria-live="polite"></p>
         <div class="items" id="items"></div>
         <div class="more"><button class="button ghost" type="button" id="showMore" hidden>Show more</button></div>
@@ -599,6 +608,44 @@
           } catch (e) { b.disabled = false; alert(`That didn't save: ${e.message}`); }
         }));
       }
+      // ---------- Site feedback (public feedback form) ----------
+      const FB_TYPES = { general: "General feedback", impact: "How I have used it", targets: "Targets missing or incorrect", interventions: "Interventions missing or incorrect", "provider-info": "Provider information", other: "Other" };
+      STATE.fb = [];
+      async function loadFeedback() {
+        try { STATE.fb = await fetchAll("/rest/v1/site_feedback?select=*&order=created_at.desc"); }
+        catch (e) { $("fbItems").innerHTML = `<p class="msg error">The site feedback couldn't be loaded: ${esc(e.message)}</p>`; return; }
+        const types = [...new Set(STATE.fb.map((r) => r.feedback_type).filter(Boolean))].sort();
+        $("sfType").innerHTML = `<option value="">All types</option>` + types.map((t) => `<option value="${esc(t)}">${esc(FB_TYPES[t] || t)}</option>`).join("");
+        ["sfStatus", "sfType"].forEach((id) => $(id).addEventListener("change", renderFeedback));
+        renderFeedback();
+      }
+      function renderFeedback() {
+        const st = $("sfStatus").value, ty = $("sfType").value;
+        const rows = STATE.fb.filter((r) => (!st || (r.status || "New") === st) && (!ty || r.feedback_type === ty));
+        $("fbCount").textContent = `(${STATE.fb.filter((r) => (r.status || "New") === "New").length} new, ${STATE.fb.length} in total)`;
+        $("fbItems").innerHTML = rows.map((r) => {
+          const status = r.status || "New";
+          return `<article class="item${status !== "New" ? " done" : ""}">
+            <span class="tag kind">${esc(FB_TYPES[r.feedback_type] || r.feedback_type || "Feedback")}</span>${status !== "New" ? `<span class="tag done">${esc(status)}</span>` : ""}
+            <div class="meta">${r.institution ? `${esc(r.institution)} &middot; ` : ""}${new Date(r.created_at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}${r.page_task ? ` &middot; from ${esc(r.page_task)}` : ""}${r.email ? ` &middot; ${esc(r.email)}` : ""}</div>
+            <blockquote>${esc(r.detail || "")}</blockquote>
+            <div class="actions"><input class="note" type="text" placeholder="Team notes: what you decided and why" value="${esc(r.team_notes || "")}" aria-label="Team notes">
+              ${status === "New" ? `<button class="button primary" type="button" data-fb="${r.id}" data-to="Approved">Approve</button>
+              <button class="button ghost" type="button" data-fb="${r.id}" data-to="Declined">Decline</button>`
+              : `<button class="button ghost" type="button" data-fb="${r.id}" data-to="New">Reopen</button>`}</div>
+          </article>`;
+        }).join("") || `<p class="empty">Nothing here yet.</p>`;
+        $("fbItems").querySelectorAll("[data-fb]").forEach((b) => b.addEventListener("click", async () => {
+          const r = STATE.fb.find((x) => String(x.id) === b.dataset.fb);
+          const notes = b.parentElement.querySelector(".note").value.trim() || null;
+          const status = b.dataset.to;
+          b.disabled = true;
+          try {
+            await api(`/rest/v1/site_feedback?id=eq.${r.id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status, team_notes: notes }) });
+            Object.assign(r, { status, team_notes: notes }); renderFeedback();
+          } catch (e) { b.disabled = false; alert(`That didn't save: ${e.message}`); }
+        }));
+      }
       $("showMore").addEventListener("click", () => { STATE.shown += 25; render(); });
 
       // ---------- Start ----------
@@ -609,7 +656,7 @@
         $("signinView").hidden = true; $("queueView").hidden = false;
         $("whoEmail").hidden = $("signOut").hidden = false;
         $("whoEmail").textContent = emailFromToken(STATE.session.access_token);
-        try { await loadQueue(); loadInst(); }
+        try { await loadQueue(); loadInst(); loadFeedback(); }
         catch (err) {
           if (!STATE.session) return showSignin();
           $("loadError").hidden = false; $("loadError").textContent = `The review queue couldn't be loaded: ${err.message}`;
