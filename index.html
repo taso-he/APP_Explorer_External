@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Exploring access and participation plans | TASO APP Explorer</title>
+    <title>Exploring access and participation plans | TASO APP Explorer Beta</title>
     <meta name="description" content="Find, compare, map and download the targets and interventions in English higher education providers' Access and Participation Plans.">
     <script>
       if (new URLSearchParams(window.location.search).get("embed") === "1") {
@@ -12,22 +12,22 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23214eab'/%3E%3Cpath d='M8 22h16M9 17h10M9 12h14' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='22' r='3' fill='%2307dbb3'/%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=Neuton:wght@400&amp;display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%233b66bc'/%3E%3Cpath d='M8 22h16M9 17h10M9 12h14' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='22' r='3' fill='%2307dbb3'/%3E%3C/svg%3E">
     <style>
       :root {
         color-scheme: light;
         --ink: #0f2847;
         --muted: #485866;
-        --soft: #edebe3;
-        --soft-2: #f7f6f1;
+        --soft: #dbe3f4;
+        --soft-2: #dbe3f4;
         --line: #e4e2d9;
         --line-strong: #74706d;
-        --brand: #214eab;
-        --brand-dark: #173a82;
-        --accent: #f9466c;
-        --highlight: #91e9d2;
-        --green: #06b292;
+        --brand: #3b66bc;
+        --brand-dark: #0f2847;
+        --accent: #07dbb3;
+        --highlight: #07dbb3;
+        --green: #07dbb3;
         --peacock: #07dbb3;
         --surface: #ffffff;
         --bg: #ffffff;
@@ -36,7 +36,7 @@
 }
       
 
-      * { box-sizing: border-box; }
+      * { box-sizing: border-box; font-family: "Barlow", Arial, Helvetica, sans-serif; }
       html { scroll-behavior: smooth; }
       body {
         margin: 0;
@@ -71,9 +71,7 @@
 
       /* ---------- Header ---------- */
       header {
-        background:
-          linear-gradient(30deg, rgba(33, 78, 171, .98), rgba(7, 219, 179, .92)),
-          repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 1px, transparent 1px 96px);
+        background: var(--ink);
         color: white;
       }
       .topbar {
@@ -90,10 +88,11 @@
 
       .hero {
         display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
-        gap: clamp(1.2rem, 4vw, 3rem); padding: 1.4rem 0 1.5rem; align-items: center;
+        gap: clamp(1.2rem, 4vw, 3rem); padding: .75rem 0 1.5rem; align-items: start;
       }
       h1 { margin: 0 0 .5rem; font-size: clamp(1.8rem, 3.6vw, 2.6rem); line-height: 1.1; letter-spacing: 0; }
       .hero p { max-width: 62ch; font-size: 1.02rem; margin: .4rem 0 0; color: rgba(255,255,255,.94); }
+      .hero .beta-note { margin-bottom: 1.5rem; }
       .pilot-panel {
         align-self: end; padding: 1rem 1.1rem; border: 1px solid rgba(255,255,255,.3);
         background: rgba(15,40,71,.18); border-radius: 8px;
@@ -140,10 +139,10 @@
       .metric strong { display: block; font-size: clamp(1.5rem, 3vw, 2.1rem); line-height: 1.1; }
 
       .notice {
-        border-left: 5px solid var(--accent); background: #fff2f5; padding: .85rem 1rem;
+        border-left: 5px solid var(--accent); background: var(--soft); padding: .85rem 1rem;
         border-radius: 4px; margin: 1rem 0;
       }
-      .notice.info { border-left-color: var(--brand); background: #eef3fc; }
+      .notice.info { border-left-color: var(--brand); background: #dbe3f4; }
 
       /* ---------- Task chooser (tabs) ---------- */
       .tasks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-top: 1.1rem; }
@@ -153,7 +152,7 @@
         border-radius: 8px; background: white; color: var(--ink); cursor: pointer; box-shadow: var(--shadow);
       }
       .task:hover { border-color: var(--brand); }
-      .task[aria-selected="true"] { border-color: var(--brand); background: #eef3fc; }
+      .task[aria-selected="true"] { border-color: var(--brand); background: #dbe3f4; }
       .task .num { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brand); }
       .task .title { font-weight: 700; font-size: 1.1rem; line-height: 1.25; }
       .task .who { font-size: .93rem; color: var(--muted); }
@@ -166,7 +165,7 @@
       .panel-head { display: flex; justify-content: space-between; gap: 1rem; align-items: start; flex-wrap: wrap; }
       .steps { display: grid; gap: 1.1rem; margin-top: 1rem; }
       .step { border-left: 4px solid var(--peacock); padding: .2rem 0 .2rem 1rem; min-width: 0; }
-      .step-label { display: block; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--green); margin-bottom: .2rem; }
+      .step-label { display: block; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brand); margin-bottom: .2rem; }
 
       fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
       legend { font-weight: 700; padding: 0; margin-bottom: .4rem; }
@@ -189,7 +188,7 @@
       caption { text-align: left; padding: .6rem .8rem; font-weight: 700; }
       th, td { padding: .6rem .75rem; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
       th { position: sticky; top: 0; z-index: 1; background: var(--soft); font-size: .9rem; }
-      tr.selected td { background: #eef3fc; }
+      tr.selected td { background: #dbe3f4; }
 
       .cards { display: grid; gap: .8rem; margin-top: .9rem; }
       .card { border: 1px solid var(--line); border-radius: 8px; padding: .9rem 1rem; background: white; }
@@ -202,8 +201,8 @@
         display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px;
         padding: .1rem .55rem; background: white; font-size: .85rem; margin: .15rem .25rem .15rem 0;
       }
-      .tag.stage { border-color: #5ca6f3; background: #eef6fe; }
-      .tag.group { border-color: var(--green); background: #e9fbf6; }
+      .tag.stage { border-color: var(--brand); background: #dbe3f4; }
+      .tag.group { border-color: var(--green); background: #dbe3f4; }
       .pilot { border: 2px solid #c8102e; border-radius: 10px; padding: .9rem 1rem; margin-top: 1rem; background: #fff7f8; }
       .pilot h4 { margin: 0 0 .3rem; color: #a00d25; }
       .pilot-list { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .6rem; }
@@ -213,6 +212,8 @@
       .qa-btn { min-height: 36px; min-width: 44px; border-radius: 6px; border: 2px solid #c8102e; background: white; color: #a00d25; font-weight: 700; cursor: pointer; padding: .2rem .6rem; }
       .qa-btn:hover { background: #fde8ec; }
       .qa-btn[aria-pressed="true"] { background: #c8102e; color: white; }
+      .pilot-item { border: 1px solid var(--line); border-radius: 8px; padding: .5rem .7rem; background: white; }
+      .pilot-item > label { border: 0; padding: 0; }
       .qa-box { flex-basis: 100%; display: grid; gap: .4rem; }
       .qa-box textarea { width: 100%; min-height: 70px; border: 1px solid var(--line-strong); border-radius: 6px; padding: .45rem .6rem; }
       .qa-done { color: #035c4b; font-weight: 600; font-size: .92rem; }
@@ -234,12 +235,12 @@
 
       /* ---------- Map ---------- */
       .map-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); gap: 1rem; margin-top: 1rem; }
-      .map-box { position: relative; border: 1px solid var(--line); border-radius: 8px; background: #f3f8fd; overflow: hidden; }
+      .map-box { position: relative; border: 1px solid var(--line); border-radius: 8px; background: #dbe3f4; overflow: hidden; }
       #ukMap { display: block; width: 100%; height: auto; max-height: 640px; touch-action: none; }
       #ukMap path, #ukMap circle { vector-effect: non-scaling-stroke; }
-      #ukMap .region { fill: #dfe8f5; stroke: #ffffff; stroke-width: 1.2; cursor: pointer; }
-      #ukMap .region:hover { fill: #c9d8ef; }
-      #ukMap .region.active { fill: #b7f0e2; stroke: var(--green); stroke-width: 2; }
+      #ukMap .region { fill: #dbe3f4; stroke: #ffffff; stroke-width: 1.2; cursor: pointer; }
+      #ukMap .region:hover { fill: #3b66bc; }
+      #ukMap .region.active { fill: #07dbb3; stroke: var(--green); stroke-width: 2; }
       #ukMap .outline { fill: #eceae3; stroke: none; }
       #ukMap .dot { fill: var(--brand); fill-opacity: .72; stroke: white; stroke-width: 1; cursor: pointer; }
       #ukMap .dot:hover, #ukMap .dot.on { fill: var(--accent); fill-opacity: .95; }
@@ -261,7 +262,7 @@
       .guide-box ul { margin: .4rem 0 0; padding-left: 1.15rem; }
       .guide-box li { margin-bottom: .45rem; }
       .guide-box.warn { border-top: 5px solid var(--accent); }
-      .guide-box.method { border-top: 5px solid var(--brand); }
+      .guide-box.method { border-top: 5px solid #07dbb3; }
       .guide-box.more { border-top: 5px solid var(--green); }
       .guide-stack { display: grid; gap: 1rem; align-content: start; }
       .feedback-box p { margin: .3rem 0 .8rem; }
@@ -301,7 +302,7 @@
         box-shadow: var(--shadow); max-height: 280px; overflow: auto; font-weight: 400;
       }
       .combo-list li { padding: .5rem .75rem; cursor: pointer; }
-      .combo-list li[aria-selected="true"], .combo-list li:hover { background: #eef3fc; color: var(--brand-dark); }
+      .combo-list li[aria-selected="true"], .combo-list li:hover { background: #dbe3f4; color: var(--brand-dark); }
       .combo-list .none { color: var(--muted); cursor: default; }
 
       /* ---------- Collapsible filters ---------- */
@@ -316,7 +317,7 @@
       .filter-body { margin-top: .8rem; }
 
       /* ---------- Provider set carried between tasks ---------- */
-      .set-notice { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; border-left: 5px solid var(--green); background: #e9fbf6; padding: .7rem 1rem; border-radius: 4px; margin: .8rem 0; }
+      .set-notice { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; border-left: 5px solid var(--green); background: #dbe3f4; padding: .7rem 1rem; border-radius: 4px; margin: .8rem 0; }
       .jump-row { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--line); }
       .jump-row .label { width: 100%; font-weight: 700; font-size: .95rem; }
       .panel { scroll-margin-top: 1rem; }
@@ -325,7 +326,7 @@
       .card-head h4 { margin: 0; }
       td .button { white-space: nowrap; }
       .chosen { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; justify-content: space-between; align-items: center;
-        border: 2px solid var(--brand); background: #eef3fc; border-radius: 8px; padding: .8rem 1rem; }
+        border: 2px solid var(--brand); background: #dbe3f4; border-radius: 8px; padding: .8rem 1rem; }
       .chosen-label { display: block; font-size: .85rem; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: .05em; margin-bottom: .2rem; }
       dialog#feedbackDialog { width: min(560px, calc(100% - 32px)); border: 0; border-radius: 10px; padding: 1.4rem 1.5rem; box-shadow: var(--shadow); color: var(--ink); }
       dialog#feedbackDialog::backdrop { background: rgba(15, 40, 71, .55); }
@@ -335,6 +336,95 @@
       .fb-trap { position: absolute; left: -9999px; }
       .fb-error { color: #b00020; font-weight: 600; margin: 0; }
       #fbFields input, #fbFields textarea { font-weight: 400; }
+          /* Design review: technical-guide palette and confirmed TASO typography.
+         Navy #0f2847; blue accent #3b66bc; peacock accent #07dbb3;
+         light blue background #dbe3f4. */
+      header { overflow: hidden; }
+      .topbar {
+        background: white; box-shadow: 0 0 0 100vmax white;
+        clip-path: inset(0 -100vmax); border-bottom: 0; flex-wrap: wrap;
+        position: relative; padding-bottom: calc(.8rem + 4px);
+        display: grid; grid-template-columns: auto 1fr; align-items: center;
+        gap: .65rem 1.5rem;
+      }
+      .topbar::after {
+        content: ""; position: absolute; bottom: 0; left: 50%;
+        width: 100vw; height: 4px; transform: translateX(-50%);
+        background: linear-gradient(to right, #07dbb3, #3b66bc);
+        pointer-events: none;
+      }
+      .brand-mark { color: var(--brand); font-size: 1.5rem; font-weight: 700; letter-spacing: normal; }
+      .beta-badge {
+        display: inline-block; padding: .15rem .5rem; border-radius: 4px;
+        background: #07dbb3; color: #0f2847; font-size: .8rem;
+        line-height: 1.4; font-weight: 700; white-space: nowrap;
+      }
+      .brand-logo { width: 92px; height: 42px; object-fit: contain; }
+      .homepage-link {
+        display: inline-flex; align-items: center; gap: .4rem; min-height: 44px;
+        color: var(--brand); font-size: 1.15rem; font-weight: 600; text-decoration: none;
+      }
+      .homepage-link svg { width: 24px; height: 24px; flex-shrink: 0; }
+      .homepage-link:hover { text-decoration: underline; }
+      .topbar nav a { color: var(--brand); }
+      .topbar nav a:hover, .topbar nav a:focus { color: var(--ink); }
+      .topbar-left { flex-wrap: nowrap; }
+      .topbar-right { display: contents; }
+      .section-links {
+        padding: .5rem 0 0;
+      }
+      .section-links ul { justify-content: flex-end; gap: 1.25rem; }
+      .section-links a {
+        display: inline-flex; align-items: center; min-height: 40px;
+        padding: .25rem 0; font-weight: 600; color: white;
+      }
+      .section-links a:hover, .section-links a:focus-visible {
+        color: white; text-decoration: underline;
+      }
+      .header-links {
+        display: flex; align-items: center; justify-content: flex-end;
+        flex-wrap: wrap; gap: .3rem .65rem; margin-left: auto;
+      }
+      .header-links a {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: .3rem; min-height: 44px; color: var(--brand);
+        text-decoration: none; font-weight: 600; font-size: .95rem;
+      }
+      .header-links a:hover { text-decoration: underline; }
+      .header-links .social-link { min-width: 44px; }
+      .header-links svg { width: 20px; height: 20px; flex-shrink: 0; }
+      h1, h1 *, h2, h2 * { font-family: "Neuton", Georgia, serif; font-weight: 400; }
+      h1 { font-size: clamp(32px, 4vw, 44px); line-height: 1.1; font-weight: 400; letter-spacing: normal; text-transform: none; }
+      h2 { font-size: 15px; line-height: 18px; letter-spacing: .14em; text-transform: uppercase; }
+      #tasks-heading, #guide-heading {
+        font-family: "Neuton", Georgia, serif;
+        color: #3b66bc;
+        font-size: clamp(28px, 3vw, 34px);
+        line-height: 1.15;
+        font-weight: 400;
+        letter-spacing: normal;
+        text-transform: none;
+      }
+      .pilot-panel { background: #dbe3f4; color: var(--ink); border-color: #dbe3f4; }
+      .pilot-panel strong, .hero .pilot-panel p { color: var(--ink); }
+      .pilot-panel a { color: var(--brand); }
+      .pilot-panel a:hover { background: white; color: var(--ink); }
+      .notice.info, .task[aria-selected="true"], tr.selected td,
+      .combo-list li[aria-selected="true"], .combo-list li:hover { background: #dbe3f4; }
+      table, caption, tbody, td { background: #edebe3; }
+      tr.selected td { background: #edebe3; }
+      th { background: var(--brand); color: white; }
+      th a, th button, th .link-button { color: white; }
+      @media (max-width: 900px) {
+        .topbar { grid-template-columns: 1fr; }
+        .header-links { margin-left: 0; justify-content: flex-start; }
+      }
+      @media (max-width: 560px) {
+        .topbar { display: flex; align-items: stretch; }
+        .topbar-left { flex-wrap: wrap; }
+        .section-links ul { justify-content: flex-start; }
+        .header-links { margin-left: 0; justify-content: flex-start; }
+      }
     </style>
   </head>
   <body>
@@ -345,21 +435,35 @@
         <div class="topbar">
           <div class="topbar-left">
             <div class="brand-mark">
-              <span>TASO APP Explorer</span>
+              <img class="brand-logo" src="https://taso-he.github.io/technicalguide/images/logo_transp.png" alt="TASO" width="92" height="42">
+              <span>APP Explorer</span>
+              <span class="beta-badge">Beta</span>
             </div>
-            <nav aria-label="Page sections">
-              <ul>
-                <li><a href="#tasks">Explore the data</a></li>
-                <li><a href="#more">Find out more</a></li>
-              </ul>
-            </nav>
+            <a class="homepage-link" href="https://taso.org.uk/">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m2 11 10-9 10 9M5 9v12h14V9M16 3h3v5"/></svg>
+              Home
+            </a>
           </div>
-          <a class="button small home-link" href="https://taso.org.uk/">TASO homepage</a>
+          <div class="topbar-right">
+          <nav class="header-links" aria-label="TASO links">
+            <a href="https://taso.org.uk/newsletter/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m3 6 9 7 9-7M3 18l6-6m12 6-6-6"/></svg><span>Sign up for our newsletter</span></a>
+            <a class="social-link" href="https://github.com/taso-he/technicalguide" aria-label="TASO technical guides on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.55v-2.14c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.95.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.69 0-1.26.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.16 1.18a10.95 10.95 0 0 1 5.75 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.24 2.75.12 3.04.73.8 1.18 1.82 1.18 3.08 0 4.42-2.69 5.4-5.25 5.68.41.36.78 1.06.78 2.14v3.16c0 .3.21.66.79.55A11.5 11.5 0 0 0 12 .7Z"/></svg></a>
+            <a class="social-link" href="https://x.com/taso_he" aria-label="TASO on X"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.3l8.2-9.4L.8 2h6.5l4.5 6.7L18.9 2Zm-1.1 18h1.7L6.4 3.9H4.6L17.8 20Z"/></svg></a>
+            <a class="social-link" href="https://uk.linkedin.com/company/taso" aria-label="TASO on LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M20.45 2H3.55C2.69 2 2 2.68 2 3.52v16.96c0 .84.69 1.52 1.55 1.52h16.9c.86 0 1.55-.68 1.55-1.52V3.52c0-.84-.69-1.52-1.55-1.52ZM7.93 18.75H4.98V9.2h2.95v9.55ZM6.45 7.89a1.71 1.71 0 1 1 0-3.42 1.71 1.71 0 0 1 0 3.42Zm12.3 10.86H15.8V14.1c0-1.11-.02-2.54-1.55-2.54-1.55 0-1.79 1.21-1.79 2.46v4.73H9.51V9.2h2.83v1.3h.04c.39-.74 1.36-1.53 2.79-1.53 2.98 0 3.58 1.96 3.58 4.51v5.27Z"/></svg></a>
+          </nav>
+          </div>
         </div>
 
+        <nav class="section-links" aria-label="Page sections">
+          <ul>
+            <li><a href="#tasks">Explore the data</a></li>
+            <li><a href="#more">Find out more</a></li>
+          </ul>
+        </nav>
         <div class="hero">
           <div>
-            <h1>Exploring access and <br class="title-break">participation plans</h1>
+            <h1>Exploring access and participation plans</h1>
+            <p class="beta-note"><em><strong>Beta:</strong> This tool is still in development and is not a final product.</em></p>
             <p>English higher education providers – who are registered with the Office for Students (OfS) in the <a href="https://www.officeforstudents.org.uk/for-providers/registering-with-the-ofs/registration-with-the-ofs-a-guide/"
    style="color: #ffffff; text-decoration: underline; text-decoration-thickness: 1px;">
   approved (fee cap) category
@@ -484,7 +588,6 @@
               <span class="step-label">Step 2</span>
               <div id="sameProviderField" style="max-width:520px"></div>
               <div id="sameTargets" aria-live="polite"></div>
-              <div id="pilotPanel"></div>
             </div>
 
             <div class="step" id="sameGapStep" hidden>
@@ -577,7 +680,7 @@
             <fieldset>
               <legend>Show areas by</legend>
               <div class="radio-row">
-                <label><input type="radio" name="mapAreas" value="region" checked> OfS region</label>
+                <label><input type="radio" name="mapAreas" value="region" checked> English region</label>
                 <label><input type="radio" name="mapAreas" value="rap"> Regional access partnership</label>
               </div>
             </fieldset>
@@ -628,8 +731,6 @@
             <h3>Before you use the data, please note the below:</h3>
             <ul>
               <li><strong>Plans can change after they are published.</strong> Formal variations to APPs may not be included, depending on when they were published. Providers may also have adjusted their interventions in response to new insight.</li>
-              <li><strong>How complete the interventions are.</strong> For plans that use the OfS intervention strategy template, the dataset captures almost all activities (none were missed in a hand count of four plans, and about 1.4% were added after an automated check of 200 plans). For the small number of plans written without strategy tables, coverage is lower, and the dataset should be read as including at least the activities listed.</li>
-              <li><strong>Grouping involves judgement.</strong> Placing records into standard lifecycle stages and student groups makes it possible to filter across plans, but some records could reasonably sit in more than one group. Always check the provider's own wording, which is kept in every record and download.</li>
               <li><strong>Check the original plan.</strong> Targets and activities use the exact text from the original APP PDFs, and every record links back to the original PDF. We have grouped them by lifecycle stage and student group so they can be filtered.</li>
               <li><strong>Not finding a provider doesn't mean it isn't working on closing gaps.</strong> Its plan may describe the work differently, or its interventions may not have been added yet.</li>
               <li><strong>This is not a league table.</strong> The number of targets or activities reflects how a plan is written, and should not be used to rank the quality or volume of a provider’s activities.</li>
@@ -661,7 +762,8 @@
           </article>
           <article class="guide-box more feedback-box" aria-labelledby="feedback-heading">
             <h3 id="feedback-heading">Give us feedback</h3>
-            <p>Spotted an error, or used the APP Explorer in your work? <a href="mailto:research@taso.org.uk">We'd like to hear from you</a>.</p>
+            <p>Spotted an error, or used the APP Explorer in your work? We'd like to hear from you.</p>
+            <button class="button primary" type="button" data-feedback>Give feedback</button>
           </article>
           </div>
         </div>
@@ -1309,16 +1411,17 @@
         const p = findProvider(sameCombo.value);
         const box = $("sameTargets");
         sameSelected = null; $("sameResultsStep").hidden = true; same.markProvider(p);
-        renderPilotPanel(p);
         if (!p) { box.innerHTML = ""; return; }
         const ts = STATE.targets.filter((t) => t.ukprn === p.ukprn);
         if (!ts.length) { box.innerHTML = `<p class="empty">No current targets found for ${esc(p.name)}.</p>`; return; }
-        box.innerHTML = `<fieldset style="margin-top:.8rem"><legend>${esc(p.name)} has ${plural(ts.length, "target")}. Choose one to find others with the same target.</legend>
+        const pilot = isPilot(p.ukprn);
+        box.innerHTML = `${pilot ? pilotIntro(p, "target") : ""}<fieldset style="margin-top:.8rem"><legend>${esc(p.name)} has ${plural(ts.length, "target")}. Choose one to find others with the same target.</legend>
           <div class="target-choice">${ts.map((t, n) => `
-            <label><input type="radio" name="sameTarget" value="${n}">
+            <div class="${pilot ? "pilot-item" : ""}"><label><input type="radio" name="sameTarget" value="${n}">
               <span><strong>${esc(t.ref)}</strong> <span class="tag stage">${esc(stageLabel(t.stageKey))}</span><span class="tag group">${esc(targetGroupText(t))}</span><br>
               <span class="meta">${esc(t.aim || "No aim stated")}</span></span>
-            </label>`).join("")}</div></fieldset>`;
+            </label>${qaControls(p.ukprn, "target", t.ref, t.aim || t.ref)}</div>`).join("")}</div></fieldset>`;
+        if (pilot) wirePilot(box);
         box.querySelectorAll('input[name="sameTarget"]').forEach((r) => r.addEventListener("change", () => {
           sameSelected = { target: ts[+r.value], provider: p };
           showChosenTarget(p, ts);
@@ -1451,7 +1554,9 @@
         } else $("gapTargetsNote").textContent = "Choose both a lifecycle stage and a student group to see how many providers have a target for that gap.";
         let empty = "No activities match. Try a broader lifecycle stage or student group, or reset the filters.";
         if (SETS.gap && !rows.length) empty = `None of ${esc(SETS.gap.label)} have interventions in the data yet. Interventions are a pilot and cover only some providers so far.`;
-        $("gapCards").innerHTML = rows.slice(0, gapShown).map((i) => {
+        const shown = [...new Set(rows.map((i) => String(i.ukprn)))];
+        const pilotProviders = shown.length === 1 && isPilot(shown[0]) ? [STATE.byUk[shown[0]]].filter(Boolean) : [];
+        $("gapCards").innerHTML = pilotProviders.map((p) => pilotIntro(p, "intervention")).join("") + rows.slice(0, gapShown).map((i) => {
           const p = STATE.byUk[i.ukprn];
           const linked = i.target_refs.map((r) => {
             const t = STATE.targetByRef[`${i.ukprn}|${r}`];
@@ -1473,7 +1578,7 @@
           $("gapCards").insertAdjacentHTML("beforeend", `<p class="empty">Showing ${fmt(gapShown)} of ${fmt(rows.length)}. <button class="button ghost small" type="button" id="gapMore">Show ${fmt(Math.min(25, rows.length - gapShown))} more</button></p>`);
           $("gapMore").addEventListener("click", () => { gapShown += 25; renderGap(); });
         }
-        wireQa($("gapCards"));
+        wirePilot($("gapCards"));
       }
 
       // ---------------------------------------------------------------
@@ -1648,15 +1753,15 @@
           $("mapClear").addEventListener("click", () => { mapSelected = null; renderMap(); });
           return;
         }
-        // Overview, summarised by OfS region or by partnership
+        // Overview, summarised by English region or by partnership
         const key = mode === "rap" ? "rap" : "region";
         const counts = {};
         list.forEach((x) => { const k = x.p[key] || "Not stated"; counts[k] = counts[k] || { providers: 0, records: 0 }; counts[k].providers++; counts[k].records += x.rows.length; });
         const records = list.reduce((a, x) => a + x.rows.length, 0);
         side.innerHTML = `<h4>${mapArea ? esc(mapArea) : "England"}</h4>
           <p>${plural(list.length, "provider")} with ${plural(records, "matching " + noun[0], "matching " + noun[1])}.</p>
-          <table style="min-width:0"><caption class="sr-only">Providers by ${key === "rap" ? "regional access partnership" : "OfS region"}</caption>
-            <thead><tr><th scope="col">${key === "rap" ? "Partnership" : "OfS region"}</th><th scope="col">Providers</th><th scope="col">${ds === "targets" ? "Targets" : "Activities"}</th></tr></thead>
+          <table style="min-width:0"><caption class="sr-only">Providers by ${key === "rap" ? "regional access partnership" : "English region"}</caption>
+            <thead><tr><th scope="col">${key === "rap" ? "Partnership" : "English region"}</th><th scope="col">Providers</th><th scope="col">${ds === "targets" ? "Targets" : "Activities"}</th></tr></thead>
             <tbody>${Object.keys(counts).sort().map((k) => `<tr><td>${esc(k)}</td><td>${counts[k].providers}</td><td>${counts[k].records}</td></tr>`).join("")}</tbody></table>
           <p class="hint" style="margin-top:.6rem">Choose a dot on the map, or a provider in the table below it, to see its records.</p>`;
       }
@@ -1716,7 +1821,7 @@
       function qaControls(ukprn, type, id, label) {
         if (!isPilot(ukprn)) return "";
         const key = `${type}|${id}`;
-        if (QA_SENT[key]) return `<div class="qa-row"><span class="qa-done">Thank you: your feedback on this ${type} was sent.</span></div>`;
+        if (QA_SENT[key]) return `<div class="qa-row"><span class="qa-done">Thank you: your feedback was sent.</span></div>`;
         return `<div class="qa-row" data-qa="${esc(key)}" data-uk="${esc(ukprn)}" data-type="${esc(type)}" data-id="${esc(id)}" data-label="${esc(label)}">
             <span class="qa-label">Is this ${type} right?</span>
             <button class="qa-btn" type="button" data-v="correct" aria-pressed="false" title="This looks correct">&#10003;<span class="sr-only"> Correct</span></button>
@@ -1725,6 +1830,18 @@
             <div class="qa-box" hidden>
               <label class="sr-only" for="qa-${esc(key)}">Details</label>
               <textarea id="qa-${esc(key)}" placeholder="What is wrong, missing or unclear? If you can, say what it should be."></textarea>
+              <div><button class="button primary small" type="button" data-send>Send</button> <span class="qa-err" hidden></span></div>
+            </div>
+          </div>`;
+      }
+      // A plain comment box (no tick/cross), for "something is missing" or overall comments
+      function qaComment(ukprn, type, id, label, ask) {
+        const key = `${type}|${id}`;
+        if (QA_SENT[key]) return `<div class="qa-row"><span class="qa-done">Thank you: your feedback was sent.</span></div>`;
+        return `<div class="qa-row" data-qa="${esc(key)}" data-uk="${esc(ukprn)}" data-type="${esc(type)}" data-id="${esc(id)}" data-label="${esc(label)}" data-default="issue">
+            <div class="qa-box">
+              <label class="qa-label" for="qa-${esc(key)}">${esc(ask)}</label>
+              <textarea id="qa-${esc(key)}" placeholder="Tell us what is missing, with its reference or page number if you can, or leave any other comment."></textarea>
               <div><button class="button primary small" type="button" data-send>Send</button> <span class="qa-err" hidden></span></div>
             </div>
           </div>`;
@@ -1744,8 +1861,8 @@
         root.querySelectorAll(".qa-row[data-qa]").forEach((row) => {
           if (row.dataset.wired) return; row.dataset.wired = "1";
           const box = row.querySelector(".qa-box"), err = row.querySelector(".qa-err");
-          const done = () => { QA_SENT[row.dataset.qa] = true; row.innerHTML = `<span class="qa-done">Thank you: your feedback on this ${esc(row.dataset.type)} was sent.</span>`; };
-          let choice = "";
+          const done = () => { QA_SENT[row.dataset.qa] = true; row.innerHTML = `<span class="qa-done">Thank you: your feedback was sent.</span>`; };
+          let choice = row.dataset.default || "";
           row.querySelectorAll(".qa-btn").forEach((b) => b.addEventListener("click", async () => {
             choice = b.dataset.v;
             row.querySelectorAll(".qa-btn").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
@@ -1761,37 +1878,31 @@
           });
         });
       }
-      function renderPilotPanel(p) {
-        const box = $("pilotPanel");
-        if (!box) return;
-        if (!p || !isPilot(p.ukprn)) { box.innerHTML = ""; return; }
+      // Box at the top of a pilot provider's targets or interventions: contact details,
+      // plus somewhere to say something is missing or to leave an overall comment.
+      function pilotIntro(p, kind) {
         const contact = JSON.parse(sessionStorage.getItem("pilotContact") || "{}");
-        const ts = STATE.targets.filter((t) => t.ukprn === p.ukprn);
-        const is = STATE.interventions.filter((i) => i.ukprn === p.ukprn);
-        box.innerHTML = `<section class="pilot" aria-labelledby="pilotHead">
-            <h4 id="pilotHead">Check ${esc(possessive(p.name))} data (pilot)</h4>
-            <p>Thank you for helping us test the APP Explorer. Please check each target and intervention below against your plan.
-              Use &#10003; if it is correct, or &#10007; or ? to tell us what is wrong, missing or unclear.
-              If something is missing from the list altogether, use the box at the end.</p>
+        const what = kind === "target" ? "targets" : "interventions";
+        const ask = kind === "target" ? "Is a target missing, or do you have a comment on these targets overall?"
+          : "Is an intervention missing, or do you have a comment on these interventions overall?";
+        return `<section class="pilot" aria-label="Check ${esc(possessive(p.name))} ${what}">
+            <h4>Check ${esc(possessive(p.name))} ${what} (pilot)</h4>
+            <p>Thank you for helping us test the APP Explorer. Please check each ${kind} below against your plan.
+              Use &#10003; if it is correct, or &#10007; or ? to tell us what is wrong or unclear.</p>
             <div class="filters" style="margin-top:.4rem">
-              <label>Your name (optional) <input id="pilotName" type="text" autocomplete="name" value="${esc(contact.name || "")}"></label>
-              <label>Your email (optional) <input id="pilotEmail" type="email" autocomplete="email" value="${esc(contact.email || "")}"></label>
+              <label>Your name (optional) <input data-pilot-name type="text" autocomplete="name" value="${esc(contact.name || "")}"></label>
+              <label>Your email (optional) <input data-pilot-email type="email" autocomplete="email" value="${esc(contact.email || "")}"></label>
             </div>
-            <h5 style="margin:1rem 0 0">Targets (${ts.length})</h5>
-            <ul class="pilot-list">${ts.map((t) => `<li><strong>${esc(t.ref)}</strong> <span class="tag stage">${esc(stageLabel(t.stageKey))}</span><span class="tag group">${esc(targetGroupText(t))}</span><br>
-              <span class="meta">${esc(t.aim || "No aim stated")}</span>${qaControls(p.ukprn, "target", t.ref, t.aim || t.ref)}</li>`).join("") || `<li class="meta">No targets found.</li>`}</ul>
-            <h5 style="margin:1rem 0 0">Interventions (${is.length})</h5>
-            <ul class="pilot-list">${is.map((i) => `<li><strong>${esc(i.name)}</strong> ${planLink(p, i.page, true)}<br>
-              <span class="meta">For: ${esc(i.students || "Not stated")}${i.strategies.length ? ` &middot; ${esc(i.strategies.join("; "))}` : ""}</span>
-              <div>${i.stageKeys.map((s) => `<span class="tag stage">${esc(stageLabel(s))}</span>`).join("")}${i.groupKeys.map((g) => `<span class="tag group">${esc(groupLabel(g))}</span>`).join("")}</div>
-              ${i.target_refs.length ? `<span class="meta">Linked targets: ${esc(i.target_refs.join(", "))}</span>` : ""}
-              ${qaControls(p.ukprn, "intervention", i.id, i.name)}</li>`).join("") || `<li class="meta">No interventions found.</li>`}</ul>
-            <h5 style="margin:1rem 0 0">Anything missing or other comments?</h5>
-            <ul class="pilot-list"><li>${qaControls(p.ukprn, "missing", "", "Missing or general comment").replace('Is this missing right?', 'Tell us about something missing, or anything else')}</li></ul>
+            ${qaComment(p.ukprn, kind === "target" ? "missing" : "general", kind, `${what} overall`, ask)}
           </section>`;
-        const save = () => sessionStorage.setItem("pilotContact", JSON.stringify({ name: $("pilotName").value.trim(), email: $("pilotEmail").value.trim() }));
-        $("pilotName").addEventListener("input", save); $("pilotEmail").addEventListener("input", save);
-        wireQa(box);
+      }
+      function wirePilot(root) {
+        const save = (src) => {
+          const box = src.closest(".pilot");
+          sessionStorage.setItem("pilotContact", JSON.stringify({ name: box.querySelector("[data-pilot-name]").value.trim(), email: box.querySelector("[data-pilot-email]").value.trim() }));
+        };
+        root.querySelectorAll("[data-pilot-name], [data-pilot-email]").forEach((i) => i.addEventListener("input", () => save(i)));
+        wireQa(root);
       }
 
       // ---------------------------------------------------------------
