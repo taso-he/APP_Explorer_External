@@ -126,6 +126,8 @@
       /* ---------- Layout ---------- */
       main { padding: 1.5rem 0 4rem; }
       section { padding: clamp(1.3rem, 3.5vw, 2.2rem) 0; }
+      #glance { padding-top: 1.2rem; padding-bottom: .4rem; }
+      #tasks { padding-top: .8rem; }
       h2 { margin: 0 0 .4rem; font-size: clamp(1.55rem, 3vw, 2.1rem); line-height: 1.15; }
       h3 { margin: 0 0 .6rem; font-size: 1.2rem; line-height: 1.25; }
       h4 { margin: 0 0 .4rem; font-size: 1.02rem; }
@@ -482,12 +484,12 @@
 
     <main id="main">
       <!-- ================= At a glance ================= -->
-      <section class="shell" aria-labelledby="glance-heading">
+      <section class="shell" id="glance" aria-labelledby="glance-heading">
         <h2 id="glance-heading" class="sr-only">The data at a glance</h2>
         <div class="glance">
           <div class="metric"><span>Providers with a current plan</span><strong id="mProviders">-</strong></div>
           <div class="metric"><span>Targets</span><strong id="mTargets">-</strong></div>
-          <div class="metric"><span>Interventions (pilot)</span><strong id="mInterventions">-</strong><span id="mInterventionsNote"></span></div>
+          <div class="metric"><span>Interventions</span><strong id="mInterventions">-</strong><span id="mInterventionsNote"></span></div>
           <div class="metric"><span>Data last updated</span><strong id="mUpdated" style="font-size:1.35rem">-</strong></div>
         </div>
         <p class="notice" id="loadNotice" role="status">Loading the data...</p>
@@ -993,7 +995,6 @@
         $("mProviders").textContent = fmt(STATE.providers.length);
         $("mTargets").textContent = fmt(STATE.targets.length);
         $("mInterventions").textContent = fmt(STATE.interventions.length);
-        $("mInterventionsNote").textContent = `from ${plural(ip, "provider")} so far`;
         const citeDate = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
         document.querySelectorAll("[data-cite-today]").forEach((e) => { e.textContent = citeDate(new Date()); });
         document.querySelectorAll("[data-cite-updated]").forEach((e) => { e.textContent = STATE.meta.as_of ? citeDate(new Date(STATE.meta.as_of)) : "see the top of the page"; });
@@ -1009,8 +1010,7 @@
         }
         $("mUpdated").textContent = STATE.meta.as_of
           ? new Date(STATE.meta.as_of).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "Not stated";
-        $("loadNotice").className = "notice info";
-        $("loadNotice").textContent = `Interventions are being added in stages, as each provider's plan is checked. They currently cover ${plural(ip, "provider")}; targets cover all ${fmt(STATE.providers.length)} providers with a current plan.`;
+        $("loadNotice").hidden = true;
       }
 
       // ---------------------------------------------------------------
@@ -1553,7 +1553,7 @@
           });
         } else $("gapTargetsNote").textContent = "Choose both a lifecycle stage and a student group to see how many providers have a target for that gap.";
         let empty = "No activities match. Try a broader lifecycle stage or student group, or reset the filters.";
-        if (SETS.gap && !rows.length) empty = `None of ${esc(SETS.gap.label)} have interventions in the data yet. Interventions are a pilot and cover only some providers so far.`;
+        if (SETS.gap && !rows.length) empty = `None of ${esc(SETS.gap.label)} have interventions in the data yet.`;
         const shown = [...new Set(rows.map((i) => String(i.ukprn)))];
         const pilotProviders = shown.length === 1 && isPilot(shown[0]) ? [STATE.byUk[shown[0]]].filter(Boolean) : [];
         $("gapCards").innerHTML = pilotProviders.map((p) => pilotIntro(p, "intervention")).join("") + rows.slice(0, gapShown).map((i) => {
@@ -1880,19 +1880,17 @@
       }
       // Box at the top of a pilot provider's targets or interventions: contact details,
       // plus somewhere to say something is missing or to leave an overall comment.
+      // "Northampton, University of, The" style names read better the right way round
+      const displayName = (n) => /, The$/.test(n) ? `the ${n.replace(/, The$/, "")}` : n;
       function pilotIntro(p, kind) {
         const contact = JSON.parse(sessionStorage.getItem("pilotContact") || "{}");
         const what = kind === "target" ? "targets" : "interventions";
         const ask = kind === "target" ? "Is a target missing, or do you have a comment on these targets overall?"
           : "Is an intervention missing, or do you have a comment on these interventions overall?";
-        return `<section class="pilot" aria-label="Check ${esc(possessive(p.name))} ${what}">
-            <h4>Check ${esc(possessive(p.name))} ${what} (pilot)</h4>
+        return `<section class="pilot" aria-label="Check ${esc(possessive(displayName(p.name)))} ${what}">
+            <h4>Check ${esc(possessive(displayName(p.name)))} ${what}</h4>
             <p>Thank you for helping us test the APP Explorer. Please check each ${kind} below against your plan.
               Use &#10003; if it is correct, or &#10007; or ? to tell us what is wrong or unclear.</p>
-            <div class="filters" style="margin-top:.4rem">
-              <label>Your name (optional) <input data-pilot-name type="text" autocomplete="name" value="${esc(contact.name || "")}"></label>
-              <label>Your email (optional) <input data-pilot-email type="email" autocomplete="email" value="${esc(contact.email || "")}"></label>
-            </div>
             ${qaComment(p.ukprn, kind === "target" ? "missing" : "general", kind, `${what} overall`, ask)}
           </section>`;
       }
