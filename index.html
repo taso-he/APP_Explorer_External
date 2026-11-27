@@ -204,6 +204,19 @@
       }
       .tag.stage { border-color: #5ca6f3; background: #eef6fe; }
       .tag.group { border-color: var(--green); background: #e9fbf6; }
+      .pilot { border: 2px solid #c8102e; border-radius: 10px; padding: .9rem 1rem; margin-top: 1rem; background: #fff7f8; }
+      .pilot h4 { margin: 0 0 .3rem; color: #a00d25; }
+      .pilot-list { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .6rem; }
+      .pilot-list > li { background: white; border: 1px solid var(--line); border-radius: 8px; padding: .6rem .75rem; }
+      .qa-row { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-top: .5rem; padding-top: .45rem; border-top: 1px dashed #e8b4bd; }
+      .qa-row .qa-label { font-weight: 700; color: #a00d25; font-size: .92rem; margin-right: .2rem; }
+      .qa-btn { min-height: 36px; min-width: 44px; border-radius: 6px; border: 2px solid #c8102e; background: white; color: #a00d25; font-weight: 700; cursor: pointer; padding: .2rem .6rem; }
+      .qa-btn:hover { background: #fde8ec; }
+      .qa-btn[aria-pressed="true"] { background: #c8102e; color: white; }
+      .qa-box { flex-basis: 100%; display: grid; gap: .4rem; }
+      .qa-box textarea { width: 100%; min-height: 70px; border: 1px solid var(--line-strong); border-radius: 6px; padding: .45rem .6rem; }
+      .qa-done { color: #035c4b; font-weight: 600; font-size: .92rem; }
+      .qa-err { color: #b00020; font-weight: 600; font-size: .92rem; }
       .tag.awaiting { border-color: #b26b00; background: #fff4e0; color: #6b4000; font-weight: 600; }
       .tag.risk { border-color: #c9c4b8; background: var(--soft-2); }
       .target-choice { display: grid; gap: .5rem; margin-top: .6rem; }
@@ -242,6 +255,7 @@
       .side-panel th { top: -1rem; }
 
       /* ---------- Always-visible guidance ---------- */
+      .cite-text { background: var(--soft-2, #f7f6f1); border-left: 4px solid var(--line-strong, #74706d); padding: .5rem .7rem; margin: .4rem 0; }
       .guide-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
       .guide-box { background: var(--soft-2); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem; }
       .guide-box ul { margin: .4rem 0 0; padding-left: 1.15rem; }
@@ -470,6 +484,7 @@
               <span class="step-label">Step 2</span>
               <div id="sameProviderField" style="max-width:520px"></div>
               <div id="sameTargets" aria-live="polite"></div>
+              <div id="pilotPanel"></div>
             </div>
 
             <div class="step" id="sameGapStep" hidden>
@@ -613,6 +628,8 @@
             <h3>Before you use the data, please note the below:</h3>
             <ul>
               <li><strong>Plans can change after they are published.</strong> Formal variations to APPs may not be included, depending on when they were published. Providers may also have adjusted their interventions in response to new insight.</li>
+              <li><strong>How complete the interventions are.</strong> For plans that use the OfS intervention strategy template, the dataset captures almost all activities (none were missed in a hand count of four plans, and about 1.4% were added after an automated check of 200 plans). For the small number of plans written without strategy tables, coverage is lower, and the dataset should be read as including at least the activities listed.</li>
+              <li><strong>Grouping involves judgement.</strong> Placing records into standard lifecycle stages and student groups makes it possible to filter across plans, but some records could reasonably sit in more than one group. Always check the provider's own wording, which is kept in every record and download.</li>
               <li><strong>Check the original plan.</strong> Targets and activities use the exact text from the original APP PDFs, and every record links back to the original PDF. We have grouped them by lifecycle stage and student group so they can be filtered.</li>
               <li><strong>Not finding a provider doesn't mean it isn't working on closing gaps.</strong> Its plan may describe the work differently, or its interventions may not have been added yet.</li>
               <li><strong>This is not a league table.</strong> The number of targets or activities reflects how a plan is written, and should not be used to rank the quality or volume of a provider’s activities.</li>
@@ -628,6 +645,12 @@
             </ul>
           </article>
           <div class="guide-stack">
+          <article class="guide-box more" id="cite" aria-labelledby="cite-heading">
+            <h3 id="cite-heading">How to cite the APP Explorer</h3>
+            <p id="citeText" class="cite-text">Transforming Access and Student Outcomes in Higher Education (TASO) (2026) <em>TASO APP Explorer: exploring access and participation plans</em>. [Website]. Available at: https://taso-he.github.io/APP_Explorer_External/ (Accessed: <span data-cite-today></span>).</p>
+            <p class="hint" style="margin:.3rem 0 .6rem">Please also give the date the data was last updated (<span data-cite-updated></span>), as the data changes over time.</p>
+            <button class="button ghost small" type="button" id="citeCopy">Copy citation</button> <span class="hint" id="citeDone" role="status"></span>
+          </article>
           <article class="guide-box more" id="more">
             <h3>Find out more</h3>
             <ul>
@@ -712,16 +735,18 @@
       ];
       // Order matters: intersections are checked before single characteristics
       const GROUPS = [
-        { key: "intersection", label: "Intersections of characteristics", re: /intersection|association between|abcs/i, codes: [] },
+        { key: "intersection", label: "Intersections of characteristics (including ABCS)", re: /intersection|association between|abcs/i, codes: ["abcs"] },
+        { key: "mental_health", label: "Mental health", re: /mental health/i, codes: ["mental_health"] },
         { key: "ethnicity", label: "Ethnicity", re: /ethnic/i, codes: ["ethnicity"], profile: (p) => p.gem, profileLabel: "students from global ethnic majority backgrounds" },
         { key: "area", label: "Area-based disadvantage (IMD, TUNDRA, POLAR)", re: /imd|deprivation|tundra|polar|participation neighbourhood|lpn/i, codes: ["area_based"], profile: (p) => sum(p.imd_q1, p.imd_q2), profileLabel: "students from IMD quintiles 1 and 2" },
-        { key: "disability", label: "Disability (including mental health)", re: /disab/i, codes: ["disability"], profile: (p) => p.disability, profileLabel: "disabled students" },
+        { key: "disability", label: "Disability", re: /disab/i, codes: ["disability"], profile: (p) => p.disability, profileLabel: "disabled students" },
         { key: "age", label: "Age (mature or young)", re: /^age/i, codes: ["age"], profile: (p) => p.mature_pct, profileLabel: "mature students" },
         { key: "fsm", label: "Free school meals", re: /free school|fsm|pupil premium/i, codes: ["fsm"], profile: (p) => p.fsm, profileLabel: "students eligible for free school meals" },
         { key: "low_income", label: "Low income", re: /low income/i, codes: ["low_income"] },
         { key: "sex", label: "Sex", re: /^sex/i, codes: ["sex"], profile: (p) => p.male, profileLabel: "male students" },
         { key: "care", label: "Care experienced and estranged", re: /care experienced|estranged/i, codes: ["care_experienced", "estranged"] },
         { key: "entry", label: "Entry qualifications or route", re: /entry qual/i, codes: ["entry_route"] },
+        { key: "mode", label: "Mode of study (full-time or part-time)", re: /part[- ]time|full[- ]time|mode of study/i, codes: ["mode_of_study"] },
         { key: "other", label: "Other groups", re: /./, codes: ["other", "first_in_family", "carer", "parents", "military", "gtrsb", "refugee_asylum", "child_in_need", "ex_prisoner", "religion", "commuter", "lgbtq"] },
         { key: "all", label: "All students", re: null, codes: ["all_students"] }
       ];
@@ -836,7 +861,7 @@
           interventions: interventions.map((i) => ({
             ukprn: i.ukprn, name: i.intervention_name || "", status: i.activity_status || "", description: i.description || "",
             strategies: i.strategies || [], students: i.students_targeted || "", groups: i.target_demographics || [],
-            stages: i.lifecycle_stages || [], target_refs: i.linked_target_ids || [], risks: i.risks || [], page: i.page,
+            id: i.record_id, stages: i.lifecycle_stages || [], target_refs: i.linked_target_ids || [], risks: i.risks || [], page: i.page,
             awaiting: !!i.awaiting_review
           })),
           meta: { as_of: dates.length ? dates[dates.length - 1].slice(0, 10) : "" }
@@ -867,6 +892,19 @@
         $("mTargets").textContent = fmt(STATE.targets.length);
         $("mInterventions").textContent = fmt(STATE.interventions.length);
         $("mInterventionsNote").textContent = `from ${plural(ip, "provider")} so far`;
+        const citeDate = (d) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+        document.querySelectorAll("[data-cite-today]").forEach((e) => { e.textContent = citeDate(new Date()); });
+        document.querySelectorAll("[data-cite-updated]").forEach((e) => { e.textContent = STATE.meta.as_of ? citeDate(new Date(STATE.meta.as_of)) : "see the top of the page"; });
+        const copyBtn = $("citeCopy");
+        if (copyBtn && !copyBtn.dataset.wired) {
+          copyBtn.dataset.wired = "1";
+          copyBtn.addEventListener("click", async () => {
+            const text = $("citeText").textContent.replace(/\s+/g, " ").trim()
+              + (STATE.meta.as_of ? ` Data last updated ${citeDate(new Date(STATE.meta.as_of))}.` : "");
+            try { await navigator.clipboard.writeText(text); $("citeDone").textContent = "Copied."; }
+            catch (e) { $("citeDone").textContent = "Copy didn't work: please select the text above and copy it."; }
+          });
+        }
         $("mUpdated").textContent = STATE.meta.as_of
           ? new Date(STATE.meta.as_of).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "Not stated";
         $("loadNotice").className = "notice info";
@@ -1271,6 +1309,7 @@
         const p = findProvider(sameCombo.value);
         const box = $("sameTargets");
         sameSelected = null; $("sameResultsStep").hidden = true; same.markProvider(p);
+        renderPilotPanel(p);
         if (!p) { box.innerHTML = ""; return; }
         const ts = STATE.targets.filter((t) => t.ukprn === p.ukprn);
         if (!ts.length) { box.innerHTML = `<p class="empty">No current targets found for ${esc(p.name)}.</p>`; return; }
@@ -1427,12 +1466,14 @@
               ${i.risks.length ? `<p><strong>Risks to equality of opportunity:</strong><br>${i.risks.map((r) => `<span class="tag risk">${esc(r)}</span>`).join("")}</p>` : ""}
             </details>
             ${linked ? `<p style="margin:.6rem 0 0"><strong>Targets this activity serves:</strong></p><ul class="linked">${linked}</ul>` : `<p class="meta" style="margin-top:.5rem">No linked targets stated.</p>`}
+            ${qaControls(i.ukprn, "intervention", i.id, i.name)}
           </article>`;
         }).join("") || `<p class="empty">${empty}</p>`;
         if (rows.length > gapShown) {
           $("gapCards").insertAdjacentHTML("beforeend", `<p class="empty">Showing ${fmt(gapShown)} of ${fmt(rows.length)}. <button class="button ghost small" type="button" id="gapMore">Show ${fmt(Math.min(25, rows.length - gapShown))} more</button></p>`);
           $("gapMore").addEventListener("click", () => { gapShown += 25; renderGap(); });
         }
+        wireQa($("gapCards"));
       }
 
       // ---------------------------------------------------------------
@@ -1662,6 +1703,95 @@
             err("Sorry, your feedback couldn't be sent. Please try again in a moment.");
           } finally { $("fbSubmit").disabled = false; }
         });
+      }
+
+
+      // ---------------------------------------------------------------
+      // Pilot: named institutions check their own targets and interventions.
+      // Saved to Supabase's institutional_contacts_qa table (insert only, these providers only).
+      // ---------------------------------------------------------------
+      const PILOT = new Set(["10007167", "10007138", "10007842", "10003854", "10007825"]);
+      const isPilot = (ukprn) => PILOT.has(String(ukprn));
+      const QA_SENT = {};
+      function qaControls(ukprn, type, id, label) {
+        if (!isPilot(ukprn)) return "";
+        const key = `${type}|${id}`;
+        if (QA_SENT[key]) return `<div class="qa-row"><span class="qa-done">Thank you: your feedback on this ${type} was sent.</span></div>`;
+        return `<div class="qa-row" data-qa="${esc(key)}" data-uk="${esc(ukprn)}" data-type="${esc(type)}" data-id="${esc(id)}" data-label="${esc(label)}">
+            <span class="qa-label">Is this ${type} right?</span>
+            <button class="qa-btn" type="button" data-v="correct" aria-pressed="false" title="This looks correct">&#10003;<span class="sr-only"> Correct</span></button>
+            <button class="qa-btn" type="button" data-v="issue" aria-pressed="false" title="Something is wrong or missing">&#10007;<span class="sr-only"> Something is wrong</span></button>
+            <button class="qa-btn" type="button" data-v="question" aria-pressed="false" title="I have a question">?<span class="sr-only"> I have a question</span></button>
+            <div class="qa-box" hidden>
+              <label class="sr-only" for="qa-${esc(key)}">Details</label>
+              <textarea id="qa-${esc(key)}" placeholder="What is wrong, missing or unclear? If you can, say what it should be."></textarea>
+              <div><button class="button primary small" type="button" data-send>Send</button> <span class="qa-err" hidden></span></div>
+            </div>
+          </div>`;
+      }
+      async function sendQa(row, verdict, comment) {
+        const contact = JSON.parse(sessionStorage.getItem("pilotContact") || "{}");
+        const p = STATE.byUk[row.dataset.uk] || {};
+        const r = await fetch(`${SUPABASE.url}/rest/v1/institutional_contacts_qa`, {
+          method: "POST", headers: { apikey: SUPABASE.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ ukprn: row.dataset.uk, provider: p.name || null, item_type: row.dataset.type, item_id: row.dataset.id || null,
+            item_label: row.dataset.label || null, verdict, comment: comment || null,
+            contact_name: contact.name || null, contact_email: contact.email || null })
+        });
+        if (!r.ok) throw new Error(r.status);
+      }
+      function wireQa(root) {
+        root.querySelectorAll(".qa-row[data-qa]").forEach((row) => {
+          if (row.dataset.wired) return; row.dataset.wired = "1";
+          const box = row.querySelector(".qa-box"), err = row.querySelector(".qa-err");
+          const done = () => { QA_SENT[row.dataset.qa] = true; row.innerHTML = `<span class="qa-done">Thank you: your feedback on this ${esc(row.dataset.type)} was sent.</span>`; };
+          let choice = "";
+          row.querySelectorAll(".qa-btn").forEach((b) => b.addEventListener("click", async () => {
+            choice = b.dataset.v;
+            row.querySelectorAll(".qa-btn").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+            if (choice === "correct") {
+              box.hidden = true;
+              try { await sendQa(row, "correct", ""); done(); } catch (e) { err.hidden = false; err.textContent = "Sorry, that couldn't be sent. Please try again."; }
+            } else { box.hidden = false; box.querySelector("textarea").focus(); }
+          }));
+          row.querySelector("[data-send]").addEventListener("click", async () => {
+            const text = box.querySelector("textarea").value.trim();
+            if (!text) { err.hidden = false; err.textContent = "Please add some details."; return; }
+            try { await sendQa(row, choice, text); done(); } catch (e) { err.hidden = false; err.textContent = "Sorry, that couldn't be sent. Please try again."; }
+          });
+        });
+      }
+      function renderPilotPanel(p) {
+        const box = $("pilotPanel");
+        if (!box) return;
+        if (!p || !isPilot(p.ukprn)) { box.innerHTML = ""; return; }
+        const contact = JSON.parse(sessionStorage.getItem("pilotContact") || "{}");
+        const ts = STATE.targets.filter((t) => t.ukprn === p.ukprn);
+        const is = STATE.interventions.filter((i) => i.ukprn === p.ukprn);
+        box.innerHTML = `<section class="pilot" aria-labelledby="pilotHead">
+            <h4 id="pilotHead">Check ${esc(possessive(p.name))} data (pilot)</h4>
+            <p>Thank you for helping us test the APP Explorer. Please check each target and intervention below against your plan.
+              Use &#10003; if it is correct, or &#10007; or ? to tell us what is wrong, missing or unclear.
+              If something is missing from the list altogether, use the box at the end.</p>
+            <div class="filters" style="margin-top:.4rem">
+              <label>Your name (optional) <input id="pilotName" type="text" autocomplete="name" value="${esc(contact.name || "")}"></label>
+              <label>Your email (optional) <input id="pilotEmail" type="email" autocomplete="email" value="${esc(contact.email || "")}"></label>
+            </div>
+            <h5 style="margin:1rem 0 0">Targets (${ts.length})</h5>
+            <ul class="pilot-list">${ts.map((t) => `<li><strong>${esc(t.ref)}</strong> <span class="tag stage">${esc(stageLabel(t.stageKey))}</span><span class="tag group">${esc(targetGroupText(t))}</span><br>
+              <span class="meta">${esc(t.aim || "No aim stated")}</span>${qaControls(p.ukprn, "target", t.ref, t.aim || t.ref)}</li>`).join("") || `<li class="meta">No targets found.</li>`}</ul>
+            <h5 style="margin:1rem 0 0">Interventions (${is.length})</h5>
+            <ul class="pilot-list">${is.map((i) => `<li><strong>${esc(i.name)}</strong> ${planLink(p, i.page, true)}<br>
+              <span class="meta">For: ${esc(i.students || "Not stated")}${i.strategies.length ? ` &middot; ${esc(i.strategies.join("; "))}` : ""}</span>
+              <div>${i.stageKeys.map((s) => `<span class="tag stage">${esc(stageLabel(s))}</span>`).join("")}${i.groupKeys.map((g) => `<span class="tag group">${esc(groupLabel(g))}</span>`).join("")}</div>
+              ${i.target_refs.length ? `<span class="meta">Linked targets: ${esc(i.target_refs.join(", "))}</span>` : ""}
+              ${qaControls(p.ukprn, "intervention", i.id, i.name)}</li>`).join("") || `<li class="meta">No interventions found.</li>`}</ul>
+            <h5 style="margin:1rem 0 0">Anything missing or other comments?</h5>
+            <ul class="pilot-list"><li>${qaControls(p.ukprn, "missing", "", "Missing or general comment").replace('Is this missing right?', 'Tell us about something missing, or anything else')}</li></ul>
+          </section>`;
+        const save = () => sessionStorage.setItem("pilotContact", JSON.stringify({ name: $("pilotName").value.trim(), email: $("pilotEmail").value.trim() }));
+        $("pilotName").addEventListener("input", save); $("pilotEmail").addEventListener("input", save);
+        wireQa(box);
       }
 
       // ---------------------------------------------------------------
