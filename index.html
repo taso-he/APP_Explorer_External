@@ -1595,10 +1595,9 @@
             <p class="meta" style="margin:.1rem 0 .4rem"><span class="provider-name">${esc(p.name)}</span> &middot; ${esc(p.region)}${i.strategies.length ? ` &middot; ${esc(i.strategies.join("; "))}` : ""}</p>
             <div>${i.awaiting ? `<span class="tag awaiting" title="Some details of this record are still being checked against the plan">Awaiting review</span>` : ""}${i.stageKeys.map((s) => `<span class="tag stage">${esc(stageLabel(s))}</span>`).join("")}${i.stages.includes("whole_lifecycle") ? `<span class="tag stage">Whole lifecycle</span>` : ""}${i.groupKeys.map((g) => `<span class="tag group">${esc(groupLabel(g))}</span>`).join("")}</div>
             <p style="margin:.5rem 0 0"><strong>For:</strong> ${esc(i.students || "Not stated")}</p>
-            <details><summary>What the plan says</summary><p style="white-space:pre-line">${esc(i.description || "Not stated")}</p>
-              ${i.risks.length ? `<p><strong>Risks to equality of opportunity:</strong><br>${i.risks.map((r) => `<span class="tag risk">${esc(r)}</span>`).join("")}</p>` : ""}
-            </details>
-            ${linked ? `<p style="margin:.6rem 0 0"><strong>Targets this activity serves:</strong></p><ul class="linked">${linked}</ul>` : `<p class="meta" style="margin-top:.5rem">No linked targets stated.</p>`}
+            <p style="margin:.5rem 0 0;white-space:pre-line">${esc(i.description || "No description stated.")}</p>
+            ${i.risks.length ? `<details><summary>Risks to equality of opportunity (${i.risks.length})</summary><p style="margin:.4rem 0 0">${i.risks.map((r) => `<span class="tag risk">${esc(r)}</span>`).join("")}</p></details>` : ""}
+            ${linked ? `<details><summary>Targets this activity serves (${i.target_refs.length})</summary><ul class="linked">${linked}</ul></details>` : `<p class="meta" style="margin-top:.5rem">No linked targets stated.</p>`}
             ${qaControls(i.ukprn, "intervention", i.id, i.name)}
           </article>`;
         }).join("") || `<p class="empty">${empty}</p>`;
